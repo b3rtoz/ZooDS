@@ -86,26 +86,39 @@ def main():
             time.sleep(0.01)
         if responses:
             for resp in responses:
-                print(f"    {read_response.process_ecu_response(resp)}")
-                print(f"    ECU ID:{hex(ecu_arbitration_id)}  Response data:{resp.hex(' ')}\n")
+                print(f"    {read_response.process_ecu_response(resp)} from {hex(ecu_arbitration_id)}")
+                print(f"    {resp.hex(' ')}")
+                data = resp.hex(' ')[3:]
+                print(f"    Data: {data}")
+                print(f"    Decoded data: {bytearray.fromhex(data).decode('ascii', errors='replace')}\n")
         else:
             print("     No UDS response received within timeout.")
 
         # if the service request was "27 01", process the response to save the seed.
         # UDS positive response for 27 01 should be "67 01 <seed...>"
-        if service_hex.replace(" ", "").lower() == "27??" and responses:
+        if service_bytes[0] == 0x27 and responses:
             complete_response = responses[0]
             result = read_response.process_ecu_response(complete_response)
-            print(f"    {read_response.process_ecu_response(complete_response)}")
-            if len(complete_response) > 2:
+            if result.startswith("P"):
                 # the seed is all bytes after the positive response "67 01".
                 seed = complete_response[2:]
-                print(f"      {seed.hex(' ')}")
+                print(f"    seed: {seed.hex(' ')}")
                 try_crack = input("Attempt to crack Security Access key? (y/n):")
                 if try_crack.lower().startswith('y'):
-                    # single byte xor crack for BH User Space Diagnostics Terminal
-                    key_crack.xor_key(seed, stack)
-        """
+                    ser_byte_arry = bytearray(service_bytes)
+                    ser_byte_arry[1] = (ser_byte_arry[1] + 1) % 256
+                    key_send_bytes = bytes(ser_byte_arry)
+                    # ask which tool
+                    cipher = input("Which cipher tool? (enter 1-n):\n"
+                          "1. Single Byte XOR\n"
+                          "2. bitwise inversion\n"
+                          "3. ...\n")
+                    if cipher == "1":
+                        # single byte xor crack for BH User Space Diagnostics Terminal
+                        key_crack.xor_key(seed, stack, key_send_bytes)
+                    # if cipher == "2":
+
+        """     
         # This section is in development...
          
         # if the service request was non-default session (10 02, or 10 03)
