@@ -28,7 +28,7 @@ def scan_rid(rid, stack, timeout=1.0):
         if stack.available():
             response = stack.recv()
             responses.append(response)
-            print(f"Received response for DID 0x{did:04X}: {response.hex()}")
+            print(f"Received response for RID 0x{rid:04X}: {response.hex()}")
             last_response_time = time.time()
         if time.time() - last_response_time > timeout:
             break
