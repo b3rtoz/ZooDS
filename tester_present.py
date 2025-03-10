@@ -2,7 +2,7 @@ import can
 import time
 
 
-def send_tester_present_functional(bus, arbitration_id, is_extended_id=False):
+def send_tester_present_functional(bus, arbitration_id, is_extended_id):
     """ Sends Tester Present (UDS service "3E 00") on the given arbitration ID and listens for responses.
     The timeout resets each time a message is received.
     Returns the list of responses (if any)."""
@@ -13,12 +13,12 @@ def send_tester_present_functional(bus, arbitration_id, is_extended_id=False):
     )
     try:
         bus.send(tester_present_msg)
-        print(f"\nSent Tester Present broadcast: {hex(arbitration_id)}: {tester_present_msg}")
+        print(f"\n Sent Tester Present from ID: {hex(arbitration_id)}: {tester_present_msg}")
     except can.CanError as e:
-        print(f"\nFailed to send Tester Present message on ID {hex(arbitration_id)}: {e}")
+        print(f"\n Failed to send Tester Present message on ID {hex(arbitration_id)}: {e}")
         return None
 
-    print("\nListening for Tester Present responses...")
+    print("\n   Listening for Tester Present responses...")
     timeout_gap = 1.0  # seconds: reset timer gap after each received frame
     last_frame_time = time.time()
     responses = []
@@ -31,9 +31,9 @@ def send_tester_present_functional(bus, arbitration_id, is_extended_id=False):
             break
     if responses:
         for r in responses:
-            print(f"\nReceived Tester Present responses:{hex(arbitration_id)}{r}")
+            print(f"       Received Tester Present responses:\n    Tester ID:{hex(arbitration_id)} \n  Response:{r}")
     else:
-        print(f"\nNo responses received for Tester Present from ID {hex(arbitration_id)}.")
+        print(f"      No responses received for Tester Present from ID {hex(arbitration_id)}.")
     return responses
 
 
@@ -50,11 +50,11 @@ def try_functional_broadcast(bus):
         return
 
     # If still no responses, ask the user to retry, try custom ID, or exit.
-    choice = input("No functional broadcast responses from standard arbitration IDs. Try again? (y/n/custom id): ")
+    choice = input("\nNo functional broadcast responses from standard arbitration IDs.\nTry again? (y/n/custom id): ")
     if choice.lower().startswith('y'):
         try_functional_broadcast(bus)
     if choice.lower().startswith('custom'):
-        arbitration_id = bytes.fromhex(input("enter arbitration ID to try in hex (e.g., 18DBFFF1, 7FF):"))
+        arbitration_id = bytes.fromhex(input("\nenter arbitration ID to try in hex (e.g., 18DBFFF1, 7FF):"))
         if len(arbitration_id) > 3:
             send_tester_present_functional(bus, arbitration_id, is_extended_id=True)
         if len(arbitration_id) == 3:
@@ -64,19 +64,19 @@ def try_functional_broadcast(bus):
         exit(0)
 
 
-def background_tester_present(bus, arbitration_id, is_extended_id, stop_event):
+def background_tester_present(bus, arbitration_id, stop_event):
     """Sends the Tester Present broadcast (02 3E 00) every 1000ms in a background thread."""
 
     message = can.Message(
         arbitration_id=arbitration_id,
         data=bytes.fromhex("02 3E 00"),
-        is_extended_id=is_extended_id
+        # is_extended_id=is_extended_id
     )
     # send test present on cycle until stop event is detected
     while not stop_event.is_set():
         try:
             bus.send(message)
-            print("Background Tester Present sent.")
+            #print("Tester Present sent.")
         except can.CanError as e:
             print(f"Background Tester Present error: {e}")
         # wait 1 sec., look for stop event then loop again

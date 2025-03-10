@@ -38,8 +38,7 @@ def process_ecu_response(response: bytes) -> str:
 
     return: A text description of the negative response if one is detected.
              If the response is not negative, returns an empty string.
-             If the response is malformed, returns a suitable error message.
-    """
+             If the response is malformed, returns a suitable error message."""
     if not response:
         return "No response received."
 
@@ -59,6 +58,6 @@ def process_ecu_response(response: bytes) -> str:
 
 if __name__ == "__main__":
     # Test:
-    test_response = bytes.fromhex("7f 67 35")
+    test_response = bytes.fromhex('7f 67 35')
     print("Test response:", test_response.hex())
     print(f"{process_ecu_response(test_response)}")
