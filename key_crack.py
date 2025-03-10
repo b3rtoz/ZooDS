@@ -58,18 +58,21 @@ def xor_key(seed, stack, key_send_bytes):
         stack: Communication interface with required methods.
         key_send_bytes (bytes): UDS request header for sending a key.
     """
-    for candidate in range(256):
-        # Compute candidate key via XOR for each possible candidate.
-        xor_value = bytes([b ^ candidate for b in seed])
-        print(f"Candidate {candidate:02X}: {xor_value.hex()}")
+    try:
+        for candidate in range(256):
+            # Compute candidate key via XOR for each possible candidate.
+            xor_value = bytes([b ^ candidate for b in seed])
+            print(f"Candidate {candidate:02X}: {xor_value.hex()}")
 
-        # Build the key request message.
-        key_req = key_send_bytes + xor_value
+            # Build the key request message.
+            key_req = key_send_bytes + xor_value
 
-        # Use the helper function to send and process the candidate key.
-        found, candidate_key, responses = key_request(key_req, stack)
-        if found:
-            break
+            # Use the helper function to send and process the candidate key.
+            found, candidate_key, responses = key_request(key_req, stack)
+            if found:
+                break
+    except KeyboardInterrupt:
+        print("\nKeyboard interrupt received. Aborting key scan.")
 
 
 def invert_bits(seed, stack, service_bytes):

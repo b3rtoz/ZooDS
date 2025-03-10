@@ -4,6 +4,7 @@ import time
 
 # import threading
 import did_read
+import rid_scan
 import tester_present
 import key_crack
 import read_response
@@ -63,8 +64,7 @@ def main():
         if service_hex.lower() == "1":
             did_read.try_all_dids(stack)
         if service_hex.lower() == "2":
-            print("Not implemented yet!")
-            continue
+            rid_scan.try_all_rids(stack)
         if service_hex.lower() == "3":
             bus.shutdown()
             break

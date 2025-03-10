@@ -2,9 +2,9 @@ import time
 import read_response
 
 
-def read_did(did, stack, timeout=0.5):
+def scan_rid(rid, stack, timeout=1.0):
     """
-    Send a ReadDataByIdentifier (0x22) request for the given DID.
+    Send a ReadDataByIdentifier (0x31) request for the given RID.
 
     Parameters:
         did (int): 2-byte identifier (0x0000 - 0xFFFF).
@@ -14,9 +14,9 @@ def read_did(did, stack, timeout=0.5):
     Returns:
         responses: list of response bytes received.
     """
-    # Build UDS request: 0x22 followed by 2 bytes of DID.
-    request = bytes([0x22, (did >> 8) & 0xFF, did & 0xFF])
-    print(f"Sending ReadDataByIdentifier (0x22) for DID: 0x{did:04X}")
+    # Build UDS request: 0x31 followed by 2 bytes of RID.
+    request = bytes([0x31, (rid >> 8) & 0xFF, rid & 0xFF])
+    print(f"Sending ReadDataByIdentifier (0x31) for RID: 0x{rid:04X}")
     stack.send(request)
 
     responses = []
@@ -37,19 +37,19 @@ def read_did(did, stack, timeout=0.5):
     return responses
 
 
-def try_all_dids(stack, timeout=0.5):
+def try_all_rids(stack, timeout=1.0):
     """
-    Iterates through all possible 2-byte DIDs and sends a ReadDataByIdentifier request.
+    Iterates through all possible 2-byte RIDs and sends a RoutineControl request.
     Prints whether a positive response is received (non-negative response) or prints the error.
     Allows a keyboard interrupt (Ctrl+C) to break the loop.
 
     Parameters:
         stack: iso-tp communication interface object
-        timeout (float): timeout in seconds for each DID request
+        timeout (float): timeout in seconds for each RID request
     """
     try:
-        for did in range(0x0000, 0x10000):
-            responses = read_did(did, stack, timeout)
+        for rid in range(0x0000, 0x10000):
+            responses = scan_rid(rid, stack, timeout)
             if responses:
                 # Check the first response: a positive response does not start with 0x7F.
                 if responses[0][0] != 0x7F:
@@ -61,7 +61,7 @@ def try_all_dids(stack, timeout=0.5):
                         print(f"    Decoded data: {bytearray.fromhex(data).decode('ascii', errors='replace')}\n")
                 else:
                     error_msg = read_response.process_ecu_response(responses[0])
-                    print(f"Negative response for DID 0x{did:04X}: {error_msg}\n")
+                    print(f"Negative response for DID 0x{rid:04X}: {error_msg}\n")
     except KeyboardInterrupt:
         print("\nKeyboard interrupt received. Aborting DID scan.")
 
