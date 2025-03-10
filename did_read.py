@@ -1,17 +1,5 @@
 import time
-import read_response  # Module assumed to process ECU responses
-
-
-def create_stack():
-    """
-    Placeholder function.
-    Replace this with your actual stack initialization which must provide:
-      - send(message: bytes)
-      - process()
-      - available()
-      - recv()
-    """
-    raise NotImplementedError("Implement the stack interface initialization.")
+import read_response
 
 
 def read_did(did, stack, timeout=1.0):
@@ -49,7 +37,7 @@ def read_did(did, stack, timeout=1.0):
     return responses
 
 
-def try_all_dids(stack, timeout=1.0):
+def try_all_dids(stack, timeout=0.5):
     """
     Iterates through all possible 2-byte DIDs and sends a ReadDataByIdentifier request.
     Prints whether a positive response is received (non-negative response) or prints the error.
@@ -67,22 +55,3 @@ def try_all_dids(stack, timeout=1.0):
             else:
                 error_msg = read_response.process_ecu_response(responses[0])
                 print(f"Negative response for DID 0x{did:04X}: {error_msg}")
-
-
-def main():
-    """
-    Main entry point for scanning all DIDs.
-    """
-    # Initialize the communication stack.
-    try:
-        stack = create_stack()
-    except NotImplementedError as nie:
-        print(nie)
-        return
-
-    # Start scanning DIDs.
-    try_all_dids(stack)
-
-
-if __name__ == "__main__":
-    main()

@@ -1,9 +1,9 @@
 import can
 import isotp
 import time
-import fnmatch
-import threading
 
+# import threading
+import did_read
 import tester_present
 import key_crack
 import read_response
@@ -21,9 +21,9 @@ def print_ascii_art(filename):
 
 
 def main():
-    print_ascii_art("monkey-art.txt")
+    # print_ascii_art("monkey-art.txt")
 
-    # 1. Ask for the socket-CAN interface (e.g., can0, vcan0)
+    # Ask for the socket-CAN interface (e.g., can0, vcan0)
     interface = input("\nEnter CAN interface (e.g., can0, vcan0): ")
     try:
         bus = can.interface.Bus(channel=interface, interface='socketcan')
@@ -56,11 +56,17 @@ def main():
 
     # Loop to send UDS service requests and receive responses.
     while True:
-        service_hex = input("\nEnter UDS service in hex (or type 'exit' to quit): ")
-        if service_hex.lower() == "exit":
+        service_hex = input("\nEnter UDS service in hex (e.g., 10 01), or choose an option:\n"
+                            "1. scan DIDs\n"
+                            "2. scan RIDs\n"
+                            "3. exit\n")
+        if service_hex.lower() == "1":
+            did_read.try_all_dids(stack)
+        if service_hex.lower() == "2":
+            print("Not implemented yet!")
+            continue
+        if service_hex.lower() == "3":
             bus.shutdown()
-            # stop_event.set()
-            # bg_tp.join()
             break
         try:
             service_bytes = bytes.fromhex(service_hex)
