@@ -2,145 +2,209 @@ import can
 import isotp
 import time
 
-# import threading
-import did_read
+import did_scan
 import rid_scan
 import tester_present
 import key_crack
 import read_response
 
 
-def print_ascii_art(filename):
+def print_logo_art(filename):
+    """Prints ASCII logo art"""
     try:
         with open(filename, 'r') as file:
-            for line in file:
-                print(line, end='')  # Print each line without adding extra newlines
+            print(file.read(), end='')
     except FileNotFoundError:
         print(f"Error: File '{filename}' not found.")
     except Exception as e:
         print(f"An error occurred: {e}")
 
 
-def main():
-    # print_ascii_art("monkey-art.txt")
+def get_hex_input(prompt):
+    """Prompts the user for a hexadecimal input and returns its integer value."""
+    user_input = input(prompt)
+    try:
+        return int(user_input, 16)
+    except ValueError:
+        print("Invalid hex format.")
+        return None
 
-    # Ask for the socket-CAN interface (e.g., can0, vcan0)
-    interface = input("\nEnter CAN interface (e.g., can0, vcan0): ")
+
+def create_iso_tp_stack(bus, tester_id, ecu_id, id_mode="11", stmin=0, blocksize=8):
+    """
+    Creates and returns an ISO-TP stack for the provided tester and ECU IDs.
+
+    Args:
+        bus: The CAN bus instance.
+        tester_id: The tester (source) ID as an integer.
+        ecu_id: The target ECU (destination) ID as an integer.
+        id_mode: "11" for 11-bit identifiers or "29" for 29-bit identifiers.
+        stmin: Separation time minimum (default 0).
+        blocksize: Block size for ISO-TP (default 8).
+
+    Returns:
+        An isotp.CanStack instance.
+    """
+    if id_mode == "11":
+        addressing_mode = isotp.AddressingMode.Normal_11bits
+    elif id_mode == "29":
+        addressing_mode = isotp.AddressingMode.Normal_29bits
+    else:
+        print("Invalid identifier mode, defaulting to 11-bit")
+        addressing_mode = isotp.AddressingMode.Normal_11bits
+
+    address = isotp.Address(addressing_mode,
+                            txid=tester_id,
+                            rxid=ecu_id)
+    return isotp.CanStack(bus=bus, address=address, params={'stmin': stmin, 'blocksize': blocksize})
+
+
+def send_and_receive(stack, service_bytes, timeout_gap=1.0):
+    """
+    Sends UDS service bytes via the ISO-TP stack and collects responses until timeout.
+
+    Args:
+        stack: The isotp.CanStack instance.
+        service_bytes: The bytes to send.
+        timeout_gap: Time in seconds to wait after the last received frame.
+
+    Returns:
+        List of response byte sequences.
+    """
+    stack.send(service_bytes)
+    responses = []
+    last_frame_time = time.time()
+    while True:
+        stack.process()
+        if stack.available():
+            responses.append(stack.recv())
+            last_frame_time = time.time()  # Reset timeout after each received frame
+        if time.time() - last_frame_time > timeout_gap:
+            break
+        time.sleep(0.01)
+    return responses
+
+
+def handle_security_access(service_bytes, responses, stack):
+    """
+    Handles Security Access responses (service 0x27). If the ECU returns a positive response,
+    extracts the seed and optionally attempts to crack the key.
+    """
+    complete_response = responses[0]
+    result = read_response.process_ecu_response(complete_response)
+    if result.startswith("P"):
+        # Assuming the positive response code "67 01", the seed follows after the first two bytes.
+        seed = complete_response[2:]
+        print(f"    Seed: {seed.hex(' ')}")
+        if input("Attempt to crack Security Access key? (y/n): ").strip().lower().startswith('y'):
+            # Prepare key request by incrementing the second byte modulo 256.
+            ser_byte_array = bytearray(service_bytes)
+            ser_byte_array[1] = (ser_byte_array[1] + 1) % 256
+            key_send_bytes = bytes(ser_byte_array)
+            cipher = input(
+                "Which cipher tool? (enter 1-n):\n"
+                "1. Single Byte XOR\n"
+                "2. Bitwise Inversion\n"
+                "3. ...\n"
+            ).strip()
+            if cipher == "1":
+                key_crack.xor_key(seed, stack, key_send_bytes)
+            # Additional cipher methods could be added here.
+    else:
+        print("Security Access did not return a positive response.")
+
+
+def main():
+    # Set up the CAN bus interface.
+    interface = input("Enter CAN interface (e.g., can0, vcan0): ").strip()
     try:
         bus = can.interface.Bus(channel=interface, interface='socketcan')
     except Exception as e:
         print(f"Error opening interface {interface}: {e}")
         return
 
-    # Ask user for tester ID discovery choice
-    discover_id = input("attempt to discover valid tester ID? (y/n):")
-    if discover_id.lower().startswith('y'):
-        # Attempt functional broadcast for Tester Present using both 11-bit and 29-bit IDs.
-        tester_present.try_functional_broadcast(bus)
-    # Ask user for tester (source) and ECU (destination) arbitration IDs.
-    tester_id_input = input("Enter Tester (source) id: ")
-    ecu_id_input = input("Enter target ECU (destination) id: ")
+    # Optionally perform functional broadcast to discover tester IDs.
+    if input("Attempt to discover valid tester ID? (y/n): ").strip().lower().startswith('y'):
+        discovered_ids = tester_present.try_functional_broadcast(bus)
+        # Assume discovered_ids is a list of integers. If not, treat as empty.
+        if discovered_ids and isinstance(discovered_ids, list) and len(discovered_ids) > 0:
+            print("Discovered tester IDs:")
+            for i, tid in enumerate(discovered_ids):
+                print(f"{i + 1}. {hex(tid)}")
+            choice = input("Select a tester ID by number, or press Enter to enter your own: ").strip()
+            if choice:
+                try:
+                    selected_index = int(choice) - 1
+                    tester_id = discovered_ids[selected_index]
+                except (ValueError, IndexError):
+                    print("Invalid selection. Please enter a tester ID manually.")
+                    tester_id = get_hex_input("Enter Tester (source) id in hex: ")
+            else:
+                tester_id = get_hex_input("Enter Tester (source) id in hex: ")
+        else:
+            print("No tester IDs discovered.")
+            tester_id = get_hex_input("Enter Tester (source) id in hex: ")
+    else:
+        tester_id = get_hex_input("Enter Tester (source) id in hex: ")
 
-    try:
-        tester_arbitration_id = int(tester_id_input, 16)
-        ecu_arbitration_id = int(ecu_id_input, 16)
-    except ValueError:
-        print("\ninvalid id format.")
+    ecu_id = get_hex_input("Enter target ECU (destination) id in hex: ")
+    if tester_id is None or ecu_id is None:
         return
 
-    # Create an ISO-TP stack with the provided addressing.
-    address = isotp.Address(isotp.AddressingMode.Normal_11bits,
-                            txid=tester_arbitration_id,
-                            rxid=ecu_arbitration_id)
-    stack = isotp.CanStack(bus=bus, address=address, params={'stmin': 0, 'blocksize': 8})
-    print(f"    ISO-TP stack created with Tester ID {hex(tester_arbitration_id)} and ECU ID {hex(ecu_arbitration_id)}.")
+    # Ask the user for the identifier mode.
+    id_mode_choice = input("Select identifier mode:\n1. 11-bit\n2. 29-bit\nYour choice (default 1): ").strip()
+    id_mode = "29" if id_mode_choice == "2" else "11"
 
-    # Loop to send UDS service requests and receive responses.
+    # Create the ISO-TP stack using the helper function.
+    stack = create_iso_tp_stack(bus, tester_id, ecu_id, id_mode=id_mode)
+    print(
+        f"ISO-TP stack created with Tester ID {hex(tester_id)} and ECU ID {hex(ecu_id)} using {id_mode}-bit identifiers.")
+
+    # Main loop to process UDS commands.
     while True:
-        service_hex = input("\nEnter UDS service in hex (e.g., 10 01), or choose an option:\n"
-                            "1. scan DIDs\n"
-                            "2. scan RIDs\n"
-                            "3. exit\n")
-        if service_hex.lower() == "1":
-            did_read.try_all_dids(stack)
-        if service_hex.lower() == "2":
+        user_choice = input(
+            "\nEnter UDS service in hex (e.g., '10 01') or choose an option:\n"
+            "1. Scan DIDs\n"
+            "2. Scan RIDs\n"
+            "3. Exit\n"
+            "Your choice: "
+        ).strip()
+
+        if user_choice == "1":
+            did_scan.try_all_dids(stack)
+            continue
+        elif user_choice == "2":
             rid_scan.try_all_rids(stack)
-        if service_hex.lower() == "3":
+            continue
+        elif user_choice == "3":
             bus.shutdown()
+            print("Shutting down CAN bus.")
             break
+
         try:
-            service_bytes = bytes.fromhex(service_hex)
+            service_bytes = bytes.fromhex(user_choice)
         except ValueError:
             print("Invalid hex input. Please try again.")
             continue
 
-        print(f"Sending UDS service {service_hex}...\n")
-        stack.send(service_bytes)
+        print(f"Sending UDS service: {user_choice}...")
+        responses = send_and_receive(stack, service_bytes)
 
-        # wait for responses with a timeout that resets after each received frame.
-        timeout_gap = 1.0  # seconds to wait after the last received frame
-        last_frame_time = time.time()
-        responses = []
-        while True:
-            stack.process()
-            if stack.available():
-                response_data = stack.recv()
-                responses.append(response_data)
-                last_frame_time = time.time()  # reset timeout on each new frame
-            if time.time() - last_frame_time > timeout_gap:
-                break
-            time.sleep(0.01)
         if responses:
             for resp in responses:
-                print(f"    {read_response.process_ecu_response(resp)} from {hex(ecu_arbitration_id)}")
-                print(f"    {resp.hex(' ')}")
+                processed = read_response.process_ecu_response(resp)
+                print(f"Response: {processed} from {hex(ecu_id)}")
+                print(f"Raw response: {resp.hex(' ')}")
                 data = resp.hex(' ')[3:]
-                print(f"    Data: {data}")
-                print(f"    Decoded data: {bytearray.fromhex(data).decode('ascii', errors='replace')}\n")
+                print(f"Data: {data}")
+                decoded = bytearray.fromhex(data).decode('ascii', errors='replace')
+                print(f"Decoded data: {decoded}\n")
         else:
-            print("     No UDS response received within timeout.")
+            print("No UDS response received within timeout.")
 
-        # if the service request was "27 01", process the response to save the seed.
-        # UDS positive response for 27 01 should be "67 01 <seed...>"
+        # Handle Security Access (service 0x27) if applicable.
         if service_bytes[0] == 0x27 and responses:
-            complete_response = responses[0]
-            result = read_response.process_ecu_response(complete_response)
-            if result.startswith("P"):
-                # the seed is all bytes after the positive response "67 01".
-                seed = complete_response[2:]
-                print(f"    seed: {seed.hex(' ')}")
-                try_crack = input("Attempt to crack Security Access key? (y/n):")
-                if try_crack.lower().startswith('y'):
-                    ser_byte_arry = bytearray(service_bytes)
-                    ser_byte_arry[1] = (ser_byte_arry[1] + 1) % 256
-                    key_send_bytes = bytes(ser_byte_arry)
-                    # ask which tool
-                    cipher = input("Which cipher tool? (enter 1-n):\n"
-                          "1. Single Byte XOR\n"
-                          "2. bitwise inversion\n"
-                          "3. ...\n")
-                    if cipher == "1":
-                        # single byte xor crack for BH User Space Diagnostics Terminal
-                        key_crack.xor_key(seed, stack, key_send_bytes)
-                    # if cipher == "2":
-
-        """     
-        # This section is in development...
-         
-        # if the service request was non-default session (10 02, or 10 03)
-        non_default = ["1002", "1003"]
-        # and the ECU replies with a positive response, start sending cyclic tester present to keep session active
-        if service_hex.replace(" ", "").lower() in non_default and responses:
-            complete_response = responses[0]
-            if read_response.is_negative_response(complete_response):
-                continue
-            else:
-                # Start the background tester present thread.
-                stop_event = threading.Event()
-                bg_tp = threading.Thread(target=tester_present.background_tester_present(bus, tester_arbitration_id,
-                                                                                         stop_event), daemon=True)
-                bg_tp.start()
-        """
+            handle_security_access(service_bytes, responses, stack)
 
 
 if __name__ == '__main__':
