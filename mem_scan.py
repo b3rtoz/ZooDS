@@ -33,7 +33,7 @@ def scan_memory_by_address(stack, start_address, end_address, block_size,
     For each address in the range (stepping by block_size), a request is sent and any ECU responses are collected.
 
     Args:
-        stack: The iso-tp communication interface.
+        stack: The iso-tp communication interface
         start_address (int): Starting memory address.
         end_address (int): Ending memory address.
         block_size (int): Number of bytes to read from each address.
@@ -66,13 +66,13 @@ def scan_memory_by_address(stack, start_address, end_address, block_size,
 def try_memory_scan(stack):
     """
     Prompts the user for a memory address range and block size, then scans the ECU
-    using the UDS ReadMemoryByAddress service. All responses are printed.
+    using the UDS ReadMemoryByAddress service. All responses are printed
 
     Args:
-        stack: The iso-tp communication interface.
+        stack: The iso-tp communication interface
 
     Returns:
-        List of scan results as returned by scan_memory_by_address.
+        List of scan results as returned by scan_memory_by_address
     """
     try:
         start_str = input("Enter start memory address (in hex, e.g., 1000): ").strip()

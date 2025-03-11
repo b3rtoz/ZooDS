@@ -1,5 +1,3 @@
-# read_response.py
-
 # Dictionary mapping standard UDS negative response codes (NRC) to their text descriptions.
 NEGATIVE_RESPONSE_CODES = {
     0x10: "General Reject",

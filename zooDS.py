@@ -3,6 +3,7 @@ import isotp
 import time
 
 import did_scan
+import mem_scan
 import rid_scan
 import tester_present
 import key_crack
@@ -21,7 +22,7 @@ def print_logo_art(filename):
 
 
 def get_hex_input(prompt):
-    """Prompts the user for a hexadecimal input and returns its integer value."""
+    """Prompts user for a hex input and returns integer value."""
     user_input = input(prompt)
     try:
         return int(user_input, 16)
@@ -32,7 +33,7 @@ def get_hex_input(prompt):
 
 def create_iso_tp_stack(bus, tester_id, ecu_id, id_mode="11", stmin=0, blocksize=8):
     """
-    Creates and returns an ISO-TP stack for the provided tester and ECU IDs.
+    Creates and returns ISO-TP stack for the provided tester and ECU IDs.
 
     Args:
         bus: The CAN bus instance.
@@ -97,19 +98,17 @@ def handle_security_access(service_bytes, responses, stack):
         seed = complete_response[2:]
         print(f"    Seed: {seed.hex(' ')}")
         if input("Attempt to crack Security Access key? (y/n): ").strip().lower().startswith('y'):
-            # Prepare key request by incrementing the second byte modulo 256.
+            # Prepare key request by incrementing the second byte modulo 256
+            # (if 2701 seed request, then 2702 key request per iso-14229).
             ser_byte_array = bytearray(service_bytes)
             ser_byte_array[1] = (ser_byte_array[1] + 1) % 256
             key_send_bytes = bytes(ser_byte_array)
-            cipher = input(
-                "Which cipher tool? (enter 1-n):\n"
-                "1. Single Byte XOR\n"
-                "2. Bitwise Inversion\n"
-                "3. ...\n"
-            ).strip()
+            cipher = input("Which cipher tool? (enter 1-n):\n1. single byte XOR\n2. bit inversion\n3. ...\n").strip()
             if cipher == "1":
                 key_crack.xor_key(seed, stack, key_send_bytes)
-            # Additional cipher methods could be added here.
+            if cipher == "2":
+                key_crack.invert_bits(seed, stack, key_send_bytes)
+            # Additional cipher methods to be added here...
     else:
         print("Security Access did not return a positive response.")
 
@@ -166,8 +165,9 @@ def main():
             "\nEnter UDS service in hex (e.g., '10 01') or choose an option:\n"
             "1. Scan DIDs\n"
             "2. Scan RIDs\n"
-            "3. Exit\n"
-            "Your choice: "
+            "3. Scan ECU Memory\n"
+            "4. Exit\n"
+            "Entry: "
         ).strip()
 
         if user_choice == "1":
@@ -177,8 +177,11 @@ def main():
             rid_scan.try_all_rids(stack)
             continue
         elif user_choice == "3":
+            mem_scan.try_memory_scan(stack)
+            continue
+        elif user_choice == "4":
             bus.shutdown()
-            print("Shutting down CAN bus.")
+            print("Shutting down interface")
             break
 
         try:
@@ -202,7 +205,7 @@ def main():
         else:
             print("No UDS response received within timeout.")
 
-        # Handle Security Access (service 0x27) if applicable.
+        # Handles Security Access (service 0x27)
         if service_bytes[0] == 0x27 and responses:
             handle_security_access(service_bytes, responses, stack)
 

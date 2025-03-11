@@ -13,12 +13,12 @@ def scan_rid(rid, stack, timeout=1.0):
     Returns:
         List of response frames.
     """
-    # Build UDS request: 0x31 followed by 2 bytes representing the RID.
+    # Build UDS request: 0x31 followed by 2 bytes for the RID function.
     request = bytes([0x31, (rid >> 8) & 0xFF, rid & 0xFF])
     print(f"Sending RoutineControl (0x31) for RID: 0x{rid:04X}")
     stack.send(request)
 
-    # Use the centralized wait_for_responses function.
+    # wait_for_responses
     responses = wait_for_responses(stack, timeout)
     for response in responses:
         print(f"Received response for RID 0x{rid:04X}: {response.hex()}")
