@@ -3,11 +3,6 @@ import read_response
 from zoo_utils import wait_for_responses
 
 
-def wait_for_responses(stack, timeout):
-    # (Assuming this is now provided by zoo_utils; kept here for context if needed.)
-    pass
-
-
 def key_request(key_req, stack, timeout=1.0):
     """
     Sends a UDS key request and waits for the ECU's response.

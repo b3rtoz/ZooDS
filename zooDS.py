@@ -50,7 +50,10 @@ def main():
         return
 
     # Automatically determine the identifier mode based on the tester ID.
-    id_mode = "29" if tester_id > 0x7FF else "11"
+    #if tester_id > 0x7FF:
+        #id_mode = "29"
+   # else:
+    id_mode = "11"
     print(f"Automatically setting arbitration ID length to {id_mode}-bit based on Tester ID {hex(tester_id)}.")
 
     # Create the ISO-TP stack using the centralized utility.
@@ -60,12 +63,12 @@ def main():
     # Main loop to process UDS commands.
     while True:
         user_choice = input(
-            "\nEnter UDS service in hex (e.g., '10 01') or choose an option:\n"
+            "\nChoose an option or enter a UDS service in hex:\n"
             "1. Scan DIDs\n"
             "2. Scan RIDs\n"
             "3. Scan Memory by Address\n"
             "4. Exit\n"
-            "Your choice: "
+            "Or enter a UDS service (hex): "
         ).strip()
 
         if user_choice == "1":
@@ -83,6 +86,7 @@ def main():
             print("Shutting down CAN bus.")
             break
 
+        # Otherwise, interpret the input as a custom UDS service in hex.
         try:
             service_bytes = bytes.fromhex(user_choice)
         except ValueError:
@@ -90,7 +94,8 @@ def main():
             continue
 
         print(f"Sending UDS service: {user_choice}...")
-        responses = wait_for_responses(stack, timeout=0.5)
+        stack.send(service_bytes)
+        responses = wait_for_responses(stack, timeout=1.0)
 
         if responses:
             for resp in responses:

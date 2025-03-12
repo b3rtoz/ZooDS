@@ -6,14 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="dcfa82d6-6f0b-46fe-a34a-beb46d32da9d" name="Changes" comment="ZooDS simplification and optimization.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/did_scan.py" beforeDir="false" afterPath="$PROJECT_DIR$/did_scan.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/key_crack.py" beforeDir="false" afterPath="$PROJECT_DIR$/key_crack.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mem_scan.py" beforeDir="false" afterPath="$PROJECT_DIR$/mem_scan.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/monkey-art.txt" beforeDir="false" afterPath="$PROJECT_DIR$/monkey-art.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rid_scan.py" beforeDir="false" afterPath="$PROJECT_DIR$/rid_scan.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tester_present.py" beforeDir="false" afterPath="$PROJECT_DIR$/tester_present.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/zooDS.py" beforeDir="false" afterPath="$PROJECT_DIR$/zooDS.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/zoo_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/zoo_utils.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -316,7 +310,15 @@
       <option name="project" value="LOCAL" />
       <updated>1741700073812</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="ZooDS simplification and optimization.">
+      <option name="closed" value="true" />
+      <created>1741762579432</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1741762579432</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
