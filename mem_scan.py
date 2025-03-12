@@ -36,7 +36,7 @@ def build_read_memory_request(address, size, mem_addr_len=4, mem_size_len=1):
 def scan_memory_by_address(stack, start_address, end_address, mem_size,
                            mem_addr_len=4, mem_size_len=1, timeout=1.0):
     """
-    Scans memory using the UDS ReadMemoryByAddress service starting at every byte from
+    Scans memory using the UDS ReadMemoryByAddress service at every byte from
     start_address to end_address. Each request reads 'mem_size' bytes.
 
     For each address, a request is built and sent. If any ECU response is received,
@@ -59,7 +59,7 @@ def scan_memory_by_address(stack, start_address, end_address, mem_size,
     try:
         for address in range(start_address, end_address + 1):
             request = build_read_memory_request(address, mem_size, mem_addr_len, mem_size_len)
-            #print(f"\nScanning memory at address 0x{address:0{mem_addr_len * 2}X} with size {mem_size} bytes.")
+            print(f"\nScanning memory at address 0x{address:0{mem_addr_len * 2}X} with size {mem_size} bytes.")
             stack.send(request)
             responses = wait_for_responses(stack, timeout)
             if responses:
@@ -67,16 +67,18 @@ def scan_memory_by_address(stack, start_address, end_address, mem_size,
                 positive = False
                 for r in responses:
                     processed = read_response.process_ecu_response(r)
+                    # data = r.hex(' ')[4:]
+                    # decoded = bytearray.fromhex(data).decode('ascii', errors='replace')
                     print(f"  {processed} - {r.hex(' ')}")
-                    if r[0] != 0x7F:  # positive response
-                        positive = True
+                    #if r[0] != 0x7F:  # positive response
+                        #positive = True
                 results.append((address, request, responses))
-                if positive:
-                    cont = input(
-                        f"Positive response received for address 0x{address:0{mem_addr_len * 2}X}. Continue scanning? (y/n): ").strip().lower()
-                    if not cont.startswith('y'):
-                        print("Memory scan paused.")
-                        break
+                #if positive:
+                    #cont = input(
+                        #f"Positive response received for address 0x{address:0{mem_addr_len * 2}X}. Continue scanning? (y/n): ").strip().lower()
+                    #if not cont.startswith('y'):
+                        #print("Memory scan aborted.")
+                        #break
             else:
                 print(f"No response for address 0x{address:0{mem_addr_len * 2}X}.")
     except KeyboardInterrupt:
@@ -118,9 +120,9 @@ def try_memory_scan(stack):
             for r in responses:
                 processed = read_response.process_ecu_response(r)
                 data = r.hex(' ')[4:]
-                decoded = bytearray.fromhex(data).decode('ascii', errors='replace')
+                # decoded = bytearray.fromhex(data).decode('ascii', errors='replace')
                 print(f"  {processed} - {r.hex(' ')}")
-                print(f"    Decoded data: {decoded}\n")
+                # print(f"    Decoded data: {decoded}\n")
     else:
         print("No responses found during memory scan.")
     return results

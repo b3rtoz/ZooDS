@@ -4,9 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="dcfa82d6-6f0b-46fe-a34a-beb46d32da9d" name="Changes" comment="ZooDS simplification and optimization.">
+    <list default="true" id="dcfa82d6-6f0b-46fe-a34a-beb46d32da9d" name="Changes" comment="clean up of 0.1 branch">
+      <change beforePath="$PROJECT_DIR$/.idea/ZooDS.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/ZooDS.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/key_crack.py" beforeDir="false" afterPath="$PROJECT_DIR$/key_crack.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mem_scan.py" beforeDir="false" afterPath="$PROJECT_DIR$/mem_scan.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/zooDS.py" beforeDir="false" afterPath="$PROJECT_DIR$/zooDS.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -35,18 +38,18 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "b3rtoz"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;b3rtoz&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/b3rtoz/ZooDS.git",
-    "accountId": "2e4ad143-a3f1-48bf-b535-18eadc1ff647"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/b3rtoz/ZooDS.git&quot;,
+    &quot;accountId&quot;: &quot;2e4ad143-a3f1-48bf-b535-18eadc1ff647&quot;
   }
-}]]></component>
+}</component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
@@ -61,6 +64,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Python.bit_inv.executor": "Run",
     "Python.main.executor": "Run",
     "Python.mem_read.executor": "Run",
     "Python.read_response.executor": "Run",
@@ -69,7 +73,7 @@
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "0.2",
+    "git-widget-placeholder": "#3 on 0.2",
     "last_opened_file_path": "/Users/b3rt0/PycharmProjects/ZooDS",
     "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
   },
@@ -81,12 +85,33 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/zooDS" />
       <recent name="$PROJECT_DIR$" />
       <recent name="$APPLICATION_CONFIG_DIR$/scratches" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.mem_scan">
+  <component name="RunManager" selected="Python.read_response">
+    <configuration name="bit_inv" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="ZooDS" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$APPLICATION_CONFIG_DIR$/scratches" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$APPLICATION_CONFIG_DIR$/scratches/bit_inv.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="mem_scan" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="ZooDS" />
       <option name="ENV_FILES" value="" />
@@ -100,7 +125,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/zooDS/mem_scan.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/mem_scan.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -122,7 +147,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/zooDS/read_response.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/read_response.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -199,17 +224,18 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.read_response" />
+        <item itemvalue="Python.bit_inv" />
         <item itemvalue="Python.mem_scan" />
         <item itemvalue="Python.standard_uds" />
         <item itemvalue="Python.zooDS" />
-        <item itemvalue="Python.read_response" />
       </list>
     </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-14705d77f0bb-aa17d162503b-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-243.25659.43" />
+        <option value="bundled-python-sdk-98f27166c754-ba05f1cad1b1-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-242.21829.153" />
       </set>
     </attachedChunks>
   </component>
@@ -302,23 +328,7 @@
       <option name="project" value="LOCAL" />
       <updated>1741592172962</updated>
     </task>
-    <task id="LOCAL-00011" summary="ZooDS simplification and optimization.">
-      <option name="closed" value="true" />
-      <created>1741700073812</created>
-      <option name="number" value="00011" />
-      <option name="presentableId" value="LOCAL-00011" />
-      <option name="project" value="LOCAL" />
-      <updated>1741700073812</updated>
-    </task>
-    <task id="LOCAL-00012" summary="ZooDS simplification and optimization.">
-      <option name="closed" value="true" />
-      <created>1741762579432</created>
-      <option name="number" value="00012" />
-      <option name="presentableId" value="LOCAL-00012" />
-      <option name="project" value="LOCAL" />
-      <updated>1741762579432</updated>
-    </task>
-    <option name="localTasksCounter" value="13" />
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -341,7 +351,7 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Added DID and RID scans" />
     <MESSAGE value="ZooDS initial commit" />
-    <MESSAGE value="ZooDS simplification and optimization." />
-    <option name="LAST_COMMIT_MESSAGE" value="ZooDS simplification and optimization." />
+    <MESSAGE value="clean up of 0.1 branch" />
+    <option name="LAST_COMMIT_MESSAGE" value="clean up of 0.1 branch" />
   </component>
 </project>

@@ -20,7 +20,7 @@ def print_ascii_art(filename):
         print(f"An error occurred: {e}")
 
 def main():
-    # Set up the CAN bus interface.
+    # Set up the CAN interface.
     interface = input("Enter CAN interface (e.g., can0, vcan0): ").strip()
     try:
         bus = can.interface.Bus(channel=interface, interface='socketcan')
@@ -28,7 +28,7 @@ def main():
         print(f"Error opening interface {interface}: {e}")
         return
 
-    # Optionally attempt to discover a tester ID.
+    # Option to discover valid tester arbitration ID.
     if input("Attempt to discover valid tester ID? (y/n): ").strip().lower().startswith('y'):
         result = tester_present.try_functional_broadcast(bus)
         if result and isinstance(result, tuple):

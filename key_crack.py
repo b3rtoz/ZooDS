@@ -101,7 +101,10 @@ def handle_security_access(service_bytes, responses, stack):
             ser_byte_array[1] = (ser_byte_array[1] + 1) % 256
             key_send_bytes = bytes(ser_byte_array)
             cipher = input(
-                "Which cipher tool? (enter 1 for Single Byte XOR, 2 for Bitwise Inversion): "
+                "Which cipher tool?\n"
+                "1. Single Byte XOR\n"
+                "2. Bitwise Inversion\n"
+                "3. ): "
             ).strip()
             if cipher == "1":
                 xor_key(seed, stack, key_send_bytes)
