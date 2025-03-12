@@ -2,6 +2,12 @@ import time
 import read_response
 from zoo_utils import wait_for_responses
 
+
+def wait_for_responses(stack, timeout):
+    # (Assuming this is now provided by zoo_utils; kept here for context if needed.)
+    pass
+
+
 def key_request(key_req, stack, timeout=1.0):
     """
     Sends a UDS key request and waits for the ECU's response.
@@ -9,7 +15,7 @@ def key_request(key_req, stack, timeout=1.0):
     Args:
         key_req (bytes): The full UDS key request message.
         stack: Communication interface with send, recv, process, and available methods.
-        timeout (float): Time in seconds to wait for responses.
+        timeout (float): Time (in seconds) to wait for responses.
 
     Returns:
         tuple: (found, candidate, responses)
@@ -32,6 +38,7 @@ def key_request(key_req, stack, timeout=1.0):
             print(read_response.process_ecu_response(responses[0]))
     return False, candidate, responses
 
+
 def xor_key(seed, stack, key_send_bytes):
     """
     Generates candidate keys by XORing each byte of the seed with every possible byte (0x00-0xFF)
@@ -53,6 +60,7 @@ def xor_key(seed, stack, key_send_bytes):
     except KeyboardInterrupt:
         print("\nKeyboard interrupt received. Aborting key scan.")
 
+
 def invert_bits(seed, stack, service_bytes):
     """
     Inverts the bits of a hex string seed, builds the key request, and sends it.
@@ -63,7 +71,7 @@ def invert_bits(seed, stack, service_bytes):
         service_bytes (bytes): UDS request header for sending a key.
     """
     num = int(seed, 16)
-    num_bits = len(seed) * 4
+    num_bits = len(seed) * 4  # Each hex digit represents 4 bits.
     inverted_num = ~num & ((1 << num_bits) - 1)
     inverted_seed = f'{inverted_num:0{len(seed)}X}'
     key_str = ' '.join([inverted_seed[i:i + 2] for i in range(0, len(inverted_seed), 2)])
@@ -74,3 +82,36 @@ def invert_bits(seed, stack, service_bytes):
     inverted_bytes = bytes.fromhex(inverted_seed)
     key_req = service_bytes + inverted_bytes
     key_request(key_req, stack)
+
+
+def handle_security_access(service_bytes, responses, stack):
+    """
+    Handles Security Access responses (service 0x27). If a positive response is received,
+    extracts the seed and optionally attempts to crack the key.
+
+    Args:
+        service_bytes (bytes): The original service request bytes.
+        responses (list): List of ECU response frames.
+        stack: Communication interface with required methods.
+    """
+    complete_response = responses[0]
+    result = read_response.process_ecu_response(complete_response)
+    if result.startswith("P"):
+        # Assuming a positive response code "67 01" where the seed follows.
+        seed = complete_response[2:]
+        print(f"Security Access positive response. Seed: {seed.hex(' ')}")
+        if input("Attempt to crack Security Access key? (y/n): ").strip().lower().startswith('y'):
+            # Modify key request header: increment second byte modulo 256.
+            ser_byte_array = bytearray(service_bytes)
+            ser_byte_array[1] = (ser_byte_array[1] + 1) % 256
+            key_send_bytes = bytes(ser_byte_array)
+            cipher = input(
+                "Which cipher tool? (enter 1 for Single Byte XOR, 2 for Bitwise Inversion): "
+            ).strip()
+            if cipher == "1":
+                xor_key(seed, stack, key_send_bytes)
+            elif cipher == "2":
+                # For bitwise inversion, convert seed to hex string.
+                invert_bits(seed.hex(), stack, key_send_bytes)
+    else:
+        print("Security Access did not return a positive response.")
