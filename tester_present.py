@@ -3,82 +3,124 @@ import time
 
 
 def send_tester_present_functional(bus, arbitration_id, is_extended_id):
-    """ Sends Tester Present (UDS service "3E 00") on the given arbitration ID and listens for responses.
-    The timeout resets each time a message is received.
-    Returns the list of responses (if any)."""
-    tester_present_msg = can.Message(
+    """
+    Send a Tester Present (UDS service '3E 00') message on the given arbitration ID,
+    and collect any responses.
+
+    Args:
+        bus: The CAN bus instance.
+        arbitration_id: The arbitration ID to use for sending.
+        is_extended_id: Boolean indicating whether the arbitration ID is extended.
+
+    Returns:
+        A list of received CAN messages.
+    """
+    msg = can.Message(
         arbitration_id=arbitration_id,
         data=bytes.fromhex("02 3E 00"),
         is_extended_id=is_extended_id
     )
     try:
-        bus.send(tester_present_msg)
-        print(f"\n Sent Tester Present from ID: {hex(arbitration_id)}: {tester_present_msg}")
+        bus.send(msg)
+        print(f"\nSent Tester Present from {hex(arbitration_id)}: {msg}")
     except can.CanError as e:
-        print(f"\n Failed to send Tester Present message on ID {hex(arbitration_id)}: {e}")
-        return None
+        print(f"Failed to send Tester Present on {hex(arbitration_id)}: {e}")
+        return []
 
-    print("\n   Listening for Tester Present responses...")
-    timeout_gap = 1.0  # seconds: reset timer gap after each received frame
-    last_frame_time = time.time()
     responses = []
+    last_time = time.time()
+    timeout_gap = 1.0  # seconds: reset timeout after each received message
     while True:
-        msg = bus.recv(timeout=0.1)
-        if msg:
-            responses.append(msg)
-            last_frame_time = time.time()  # reset timeout on each frame received
-        if time.time() - last_frame_time > timeout_gap:
+        r = bus.recv(timeout=0.1)
+        if r:
+            responses.append(r)
+            last_time = time.time()  # Reset timeout on receiving a message
+        if time.time() - last_time > timeout_gap:
             break
+
     if responses:
         for r in responses:
-            print(f"       Received Tester Present responses:\n    Tester ID:{hex(arbitration_id)} \n  Response:{r}")
+            print(f"Received response from {hex(r.arbitration_id)}: {r}")
     else:
-        print(f"      No responses received for Tester Present from ID {hex(arbitration_id)}.")
+        print(f"No responses for Tester Present on {hex(arbitration_id)}.")
     return responses
 
 
 def try_functional_broadcast(bus):
-    """ Attempts to send a Tester Present functional broadcast using 29-bit, then 11-bit IDs.
-    If no responses are received for both, prompts the user to retry or exit."""
-    # try 29-bit functional broadcast (standard arbitration ID: 0x18DB33F1)
-    responses = send_tester_present_functional(bus, 0x18DB33F1, is_extended_id=True)
-    if responses:
-        return
-    # if no responses to 29-bit broadcast, try 11-bit (standard arbitration ID: 0x7DF)
-    responses = send_tester_present_functional(bus, 0x7DF, is_extended_id=False)
-    if responses:
-        return
+    """
+    Attempt to send a Tester Present functional broadcast using standard 29-bit and 11-bit IDs.
+    If no responses are received, prompt the user to retry, use a custom ID, or exit.
 
-    # If still no responses, ask the user to retry, try custom ID, or exit.
-    choice = input("\nNo functional broadcast responses from standard arbitration IDs.\nTry again? (y/n/custom id): ")
-    if choice.lower().startswith('y'):
-        try_functional_broadcast(bus)
-    if choice.lower().startswith('custom'):
-        arbitration_id = bytes.fromhex(input("\nenter arbitration ID to try in hex (e.g., 18DBFFF1, 7FF):"))
-        if len(arbitration_id) > 3:
-            send_tester_present_functional(bus, arbitration_id, is_extended_id=True)
-        if len(arbitration_id) == 3:
-            send_tester_present_functional(bus, arbitration_id, is_extended_id=False)
-    else:
-        bus.shutdown()
-        exit(0)
+    Returns:
+        A unique list of discovered tester IDs extracted from responses.
+    """
+    discovered_ids = []
+    # List of standard arbitration IDs to try: (ID, is_extended_id)
+    standard_ids = [
+        (0x18DB33F1, True),  # 29-bit standard
+        (0x7DF, False)  # 11-bit standard
+    ]
+
+    for arb_id, is_ext in standard_ids:
+        responses = send_tester_present_functional(bus, arb_id, is_ext)
+        discovered_ids.extend(r.arbitration_id for r in responses)
+
+    discovered_ids = list(set(discovered_ids))  # Remove duplicates
+
+    while not discovered_ids:
+        choice = input(
+            "\nNo responses received. Choose an option:\n"
+            "  (y) Try again\n"
+            "  (c) Enter custom arbitration ID\n"
+            "  (e) Exit\n"
+            "Your choice: "
+        ).strip().lower()
+        if choice.startswith('y'):
+            for arb_id, is_ext in standard_ids:
+                responses = send_tester_present_functional(bus, arb_id, is_ext)
+                discovered_ids.extend(r.arbitration_id for r in responses)
+            discovered_ids = list(set(discovered_ids))
+        elif choice.startswith('c'):
+            custom_id_str = input("Enter custom arbitration ID in hex (e.g., 18DBFFF1 or 7FF): ").strip()
+            try:
+                custom_id = int(custom_id_str, 16)
+            except ValueError:
+                print("Invalid hex value. Please try again.")
+                continue
+            is_ext = custom_id > 0x7FF
+            responses = send_tester_present_functional(bus, custom_id, is_ext)
+            discovered_ids.extend(r.arbitration_id for r in responses)
+            discovered_ids = list(set(discovered_ids))
+            if not discovered_ids:
+                print("No responses for custom ID.")
+        else:
+            print("Exiting.")
+            bus.shutdown()
+            exit(0)
+
+    return discovered_ids
 
 
 def background_tester_present(bus, arbitration_id, stop_event):
-    """Sends the Tester Present broadcast (02 3E 00) every 1000ms in a background thread."""
+    """
+    Continuously send a Tester Present message every 1 second in a background thread,
+    until the stop_event is set.
 
-    message = can.Message(
+    Args:
+        bus: The CAN bus instance.
+        arbitration_id: The arbitration ID to use.
+        stop_event: A threading.Event that signals when to stop.
+    """
+    is_ext = arbitration_id > 0x7FF
+    msg = can.Message(
         arbitration_id=arbitration_id,
         data=bytes.fromhex("02 3E 00"),
-        # is_extended_id=is_extended_id
+        is_extended_id=is_ext
     )
-    # send test present on cycle until stop event is detected
     while not stop_event.is_set():
         try:
-            bus.send(message)
-            #print("Tester Present sent.")
+            bus.send(msg)
         except can.CanError as e:
             print(f"Background Tester Present error: {e}")
-        # wait 1 sec., look for stop event then loop again
         if stop_event.wait(1.0):
             break
