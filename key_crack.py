@@ -1,9 +1,6 @@
-import time
-import read_response
-from zoo_utils import wait_for_responses
+from zoo_utils import wait_for_responses, process_ecu_response
 
-
-def key_request(key_req, stack, timeout=1.0):
+def key_request(key_req, stack, timeout=0.3):
     """
     Sends a UDS key request and waits for the ECU's response.
 
@@ -25,12 +22,12 @@ def key_request(key_req, stack, timeout=1.0):
 
     if responses:
         if responses[0][0] != 0x7F:
-            flag = responses[0].hex(' ')[2:]
-            print(f"\nKey found! Candidate key: {candidate.hex()}\nResponse: {flag}")
+            flag = responses[0].hex(' ')[6:]
+            print(f"\nKey found!\n Security Access gained with key {candidate.hex()}\nResponse: {flag}")
             print(f"Decoded data: {bytearray.fromhex(flag).decode('ascii', errors='replace')}")
             return True, candidate, responses
         else:
-            print(read_response.process_ecu_response(responses[0]))
+            print(process_ecu_response(responses[0]))
     return False, candidate, responses
 
 
@@ -90,13 +87,13 @@ def handle_security_access(service_bytes, responses, stack):
         stack: Communication interface with required methods.
     """
     complete_response = responses[0]
-    result = read_response.process_ecu_response(complete_response)
+    result = process_ecu_response(complete_response)
     if result.startswith("P"):
         # Assuming a positive response code "67 01" where the seed follows.
         seed = complete_response[2:]
         print(f"Security Access positive response. Seed: {seed.hex(' ')}")
         if input("Attempt to crack Security Access key? (y/n): ").strip().lower().startswith('y'):
-            # Modify key request header: increment second byte modulo 256.
+            # Modify key request header: increment second byte.
             ser_byte_array = bytearray(service_bytes)
             ser_byte_array[1] = (ser_byte_array[1] + 1) % 256
             key_send_bytes = bytes(ser_byte_array)
@@ -104,7 +101,7 @@ def handle_security_access(service_bytes, responses, stack):
                 "Which cipher tool?\n"
                 "1. Single Byte XOR\n"
                 "2. Bitwise Inversion\n"
-                "3. ): "
+                # "3. ..." list to be expanded with additional "bit twiddling"
             ).strip()
             if cipher == "1":
                 xor_key(seed, stack, key_send_bytes)

@@ -1,7 +1,4 @@
-import time
-import read_response
-from zoo_utils import wait_for_responses
-
+from zoo_utils import wait_for_responses, process_ecu_response
 
 def build_read_memory_request(address, size, mem_addr_len=4, mem_size_len=1):
     """
@@ -66,7 +63,7 @@ def scan_memory_by_address(stack, start_address, end_address, mem_size,
                 #print(f"Response for address 0x{address:0{mem_addr_len * 2}X}:")
                 positive = False
                 for r in responses:
-                    processed = read_response.process_ecu_response(r)
+                    processed = process_ecu_response(r)
                     # data = r.hex(' ')[4:]
                     # decoded = bytearray.fromhex(data).decode('ascii', errors='replace')
                     print(f"  {processed} - {r.hex(' ')}")
@@ -118,8 +115,8 @@ def try_memory_scan(stack):
         for addr, req, responses in results:
             print(f"Address 0x{addr:0{4}X}:")
             for r in responses:
-                processed = read_response.process_ecu_response(r)
-                data = r.hex(' ')[4:]
+                processed = process_ecu_response(r)
+                # data = r.hex(' ')[4:]
                 # decoded = bytearray.fromhex(data).decode('ascii', errors='replace')
                 print(f"  {processed} - {r.hex(' ')}")
                 # print(f"    Decoded data: {decoded}\n")

@@ -1,8 +1,6 @@
-import time
-import read_response
-from zoo_utils import wait_for_responses
+from zoo_utils import wait_for_responses, process_ecu_response
 
-def scan_rid(rid, stack, timeout=0.1):
+def scan_rid(rid, stack, timeout=0.3):
     """
     Sends a RoutineControl (0x31) request for the given RID using the "StartRoutine" sub-function.
     """
@@ -16,7 +14,7 @@ def scan_rid(rid, stack, timeout=0.1):
         print(f"Received response for RID 0x{rid:04X}: {response.hex()}")
     return responses
 
-def try_all_rids(stack, timeout=1.0):
+def try_all_rids(stack, timeout=0.3):
     """
     Iterates through all possible 2-byte RIDs, sending a RoutineControl (StartRoutine) request for each.
     Processes and prints responses, and if a positive response is received, pauses to ask the user
@@ -29,10 +27,10 @@ def try_all_rids(stack, timeout=1.0):
                 # Positive response assumed if first byte is not 0x7F.
                 if responses[0][0] != 0x7F:
                     for r in responses:
-                        processed = read_response.process_ecu_response(resp)
+                        processed = process_ecu_response(r)
                         print(f"    {processed}")
                         print(f"    {r.hex(' ')}")
-                        data = r.hex(' ')[4:]
+                        data = r.hex()[6:]
                         decoded = bytearray.fromhex(data).decode('ascii', errors='replace')
                         print(f"    Data: {data}")
                         print(f"    Decoded data: {decoded}\n")
@@ -41,7 +39,7 @@ def try_all_rids(stack, timeout=1.0):
                         print("exiting RID scan")
                         break
                 else:
-                    error_msg = read_response.process_ecu_response(responses[0])
+                    error_msg = process_ecu_response(responses[0])
                     print(f"Negative response for RID 0x{rid:04X}: {error_msg}\n")
     except KeyboardInterrupt:
         print("\nKeyboard interrupt received. Aborting RID scan.")

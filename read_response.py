@@ -17,7 +17,9 @@ NEGATIVE_RESPONSE_CODES = {
     0x71: "Transfer Data Suspended",
     0x72: "General Programming Failure",
     0x73: "Wrong Block Sequence Counter",
-    0x78: "Response Pending"
+    0x78: "Response Pending",
+    0x7E: "Sub-function Not Supported In Active Session",
+    0x7F: "Service Not Supported In Active Session"
 }
 
 

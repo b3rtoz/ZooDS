@@ -12,7 +12,7 @@ def send_tester_present_functional(bus, arbitration_id, is_extended_id):
         is_extended_id (bool): True if using 29-bit IDs, False for 11-bit.
 
     Returns:
-        List of received CAN messages.
+        List of received messages.
     """
     tester_present_msg = can.Message(
         arbitration_id=arbitration_id,
@@ -73,9 +73,11 @@ def try_functional_broadcast(bus):
     while True:
         choice = input(
             "\nNo functional broadcast responses from standard tester IDs.\n"
-            "Try again? (y), enter custom tester ID? (c), or exit (e): "
-        ).strip().lower()
-        if choice.startswith('y'):
+            "1. Scan again\n"
+            "3. EXIT\n"
+            "Or enter custom tester ID:"
+        ).strip()
+        if choice == '1' :
             for tester_id, is_ext in standard_ids:
                 responses = send_tester_present_functional(bus, tester_id, is_ext)
                 if responses:
@@ -83,7 +85,10 @@ def try_functional_broadcast(bus):
                     print(f"Functional broadcast successful with tester ID {hex(tester_id)}.")
                     print("ECU responses from IDs: " + ", ".join(hex(x) for x in ecu_ids))
                     return tester_id, ecu_ids
-        elif choice.startswith('c'):
+        elif choice == ('2'):
+            bus.shutdown()
+            exit(0)
+        else:
             custom_id_str = input("Enter custom tester arbitration ID in hex (e.g., 18DBFFF1 or 7DF): ").strip()
             try:
                 custom_id = int(custom_id_str, 16)
@@ -99,9 +104,6 @@ def try_functional_broadcast(bus):
                 return custom_id, ecu_ids
             else:
                 print("No responses for custom tester ID.")
-        else:
-            bus.shutdown()
-            exit(0)
 
 def background_tester_present(bus, arbitration_id, stop_event):
     """
