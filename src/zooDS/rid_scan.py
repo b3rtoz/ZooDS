@@ -1,4 +1,4 @@
-from zoo_utils import wait_for_responses, process_ecu_response
+from .zoo_utils import wait_for_responses, process_ecu_response
 
 def scan_rid(rid, stack, timeout=0.3):
     """

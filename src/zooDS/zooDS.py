@@ -1,12 +1,8 @@
 import can
-import did_scan
-import rid_scan
-import tester_present
-import key_crack
-import zoo_utils
+from zooDS import did_scan, mem_scan, tester_present, zoo_utils, rid_scan, key_crack
 
 
-def main():
+def zds():
     # Set up the CAN interface.
     interface = input("Enter CAN interface (e.g., can0, vcan0): ").strip()
     try:
@@ -54,7 +50,8 @@ def main():
             "1. Scan DIDs\n"
             "2. Scan RIDs\n"
             "3. Scan Memory by Address\n"
-            "4. Exit\n"
+            "4. Change Tester ID"
+            "5. Exit\n"
             "Or enter a UDS service (e.g., 10 01): "
         ).strip()
 
@@ -65,10 +62,15 @@ def main():
             rid_scan.try_all_rids(stack)
             continue
         elif user_choice == "3":
-            import mem_scan
             mem_scan.try_memory_scan(stack)
             continue
         elif user_choice == "4":
+            tester_id = zoo_utils.get_hex_input("Enter Tester (source) id in hex: ")
+            stack = zoo_utils.create_iso_tp_stack(bus, tester_id, ecu_id, id_mode=id_mode)
+            print(
+                f"ISO-TP stack created with Tester ID {hex(tester_id)} and ECU ID {hex(ecu_id)} using {id_mode}-bit identifiers.")
+            continue
+        elif user_choice == "5":
             bus.shutdown()
             print("Shutting down CAN bus.")
             break
@@ -93,6 +95,3 @@ def main():
         # If Security Access (0x27) is requested, delegate handling to key_crack.
         if service_bytes[0] == 0x27 and responses:
             key_crack.handle_security_access(service_bytes, responses, stack)
-
-if __name__ == '__main__':
-    main()

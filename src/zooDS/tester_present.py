@@ -41,7 +41,7 @@ def send_tester_present_functional(bus, arbitration_id, is_extended_id):
         for r in responses:
             print(f"Received response from ECU ID {hex(r.arbitration_id)}: {r}")
     else:
-        print(f"No responses for Tester Present on ID {hex(arbitration_id)}.")
+        print(f"No responses to Tester Present from ID {hex(arbitration_id)}.")
     return responses
 
 def try_functional_broadcast(bus):
@@ -51,7 +51,6 @@ def try_functional_broadcast(bus):
 
     It first tries a standard 29-bit tester ID (0x18DB33F1) then a standard 11-bit (0x7DF).
     If no responses are received, it prompts the user to retry or enter a custom tester ID.
-    The identifier mode (11-bit or 29-bit) is automatically set based on the tester ID value.
 
     Returns:
         (int, list): A tuple where the first element is the tester arbitration ID used,
@@ -70,40 +69,50 @@ def try_functional_broadcast(bus):
             return tester_id, ecu_ids
 
     # No responses received; prompt the user.
-    while True:
-        choice = input(
-            "\nNo functional broadcast responses from standard tester IDs.\n"
-            "1. Scan again\n"
-            "3. EXIT\n"
-            "Or enter custom tester ID:"
-        ).strip()
-        if choice == '1' :
-            for tester_id, is_ext in standard_ids:
-                responses = send_tester_present_functional(bus, tester_id, is_ext)
+    try:
+        while True:
+            user_choice = input(
+                "\nNo functional broadcast responses from standard tester IDs.\n"
+                "1. Scan again\n"
+                "3. EXIT\n"
+                "Or enter custom tester ID:"
+            ).strip()
+            if user_choice == '1' :
+                for tester_id, is_ext in standard_ids:
+                    responses = send_tester_present_functional(bus, tester_id, is_ext)
+                    if responses:
+                        ecu_ids = list({msg.arbitration_id for msg in responses})
+                        print(f"Functional broadcast with tester ID {hex(tester_id)}.")
+                        print("ECU responses from IDs: " + ", ".join(hex(x) for x in ecu_ids))
+                        return tester_id, ecu_ids
+            elif user_choice == '2':
+                bus.shutdown()
+                exit(0)
+            else:
+                custom_id = user_choice.strip()
+                try:
+                    custom_id = int(custom_id, 16)
+                except ValueError:
+                    print("Invalid value. Please try again.")
+                    continue
+                is_ext = custom_id > 0x7FF  # Automatically determine ID length.
+                responses = send_tester_present_functional(bus, custom_id, is_ext)
                 if responses:
                     ecu_ids = list({msg.arbitration_id for msg in responses})
-                    print(f"Functional broadcast successful with tester ID {hex(tester_id)}.")
+                    print(f"Functional broadcast successful with tester ID {hex(custom_id)}.")
                     print("ECU responses from IDs: " + ", ".join(hex(x) for x in ecu_ids))
-                    return tester_id, ecu_ids
-        elif choice == ('2'):
-            bus.shutdown()
-            exit(0)
-        else:
-            custom_id_str = input("Enter custom tester arbitration ID in hex (e.g., 18DBFFF1 or 7DF): ").strip()
-            try:
-                custom_id = int(custom_id_str, 16)
-            except ValueError:
-                print("Invalid hex value. Please try again.")
-                continue
-            is_ext = custom_id > 0x7FF  # Automatically determine ID length.
-            responses = send_tester_present_functional(bus, custom_id, is_ext)
-            if responses:
-                ecu_ids = list({msg.arbitration_id for msg in responses})
-                print(f"Functional broadcast successful with tester ID {hex(custom_id)}.")
-                print("ECU responses from IDs: " + ", ".join(hex(x) for x in ecu_ids))
-                return custom_id, ecu_ids
-            else:
-                print("No responses for custom tester ID.")
+                    return custom_id, ecu_ids
+                else:
+                    cust_choice = input(f"Use it anyway? (y/n): ".format().strip().lower())
+                    if cust_choice.startswith('y'):
+                        return custom_id
+                    else:
+                        return
+    except KeyboardInterrupt:
+        print("Exiting zooDS")
+        bus.shutdown()
+        exit(0)
+
 
 def background_tester_present(bus, arbitration_id, stop_event):
     """
