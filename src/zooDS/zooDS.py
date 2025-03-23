@@ -22,7 +22,7 @@ def zds():
             "1. Scan DIDs\n"
             "2. Scan RIDs\n"
             "3. Scan Memory by Address\n"
-            "4. Update Tester/ECU IDs"
+            "4. Update Tester/ECU IDs\n"
             "5. Exit\n"
             "Or enter a UDS service (e.g., 10 01): "
         ).strip()
