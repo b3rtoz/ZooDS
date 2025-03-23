@@ -68,7 +68,7 @@ ZooDS is distributed under the MIT license. See the [LICENSE](LICENSE) file for 
 
 ## Contact
 
-For feature requests, questions, or bug reports, please open an issue on GitHub or join our community Discord server.
+For feature requests, questions, or bug reports, please open an issue or post in the discussions.
 
 ## Acknowledgements
 
