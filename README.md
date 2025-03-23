@@ -23,13 +23,7 @@ ZooDS is a Python-based command-line interface (CLI) tool designed for automotiv
 
 ## Installation
 
-You can install ZooDS into your environment using pip. If you haven't already, make sure you have Python 3.9+ installed.
-
-```bash
-pip install zooDS
-```
-
-Alternatively, clone the repository and install the dependencies:
+Clone the repository and install the dependencies:
 
 ```bash
 git clone https://github.com/b3rtoz/zooDS.git
