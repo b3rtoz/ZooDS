@@ -1,5 +1,5 @@
 import typer
-from .zooDS import zds
+from .user_interface import zds
 
 
 app = typer.Typer()

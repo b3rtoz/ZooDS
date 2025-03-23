@@ -4,15 +4,22 @@ ZooDS is a Python-based command-line interface (CLI) tool designed for automotiv
 
 ## Features
 
-- **UDS Session Management:** Initiate and maintain diagnostic sessions.
 - **Service Execution:** Send UDS diagnostic commands for various services.
-- **Data Scanning:** Retrieve diagnostic data for in-depth vehicle analysis.
-- **Tester Present:** Send periodic messages to keep diagnostic sessions active.
-- **Extensible Commands:** Easily add new diagnostic operations based on your needs.
+- **DID Scanning:** Discovery valid UDS Data Identifiers.
+- **RID Scanning:** Discovery supported UDS Routine Identifiers.
+- **Memory Scanning:** Scan memory for a given address range and return data.
+- **0x27 Handler:** Retrieves seed and generates key for UDS Security Access.
+- **(planned)** UDS Session Management: Initiate and maintain diagnostic sessions.
 
 ## Requirements
 
 - Python 3.9 or later
+- Dependencies:
+  - click (≥ 8.0.0): Command line interface creation toolkit
+  - python-can (≥ 4.5.0): CAN bus interface module
+  - can-isotp (≥ 2.0.6): ISO-TP (ISO 15765-2) implementation for CAN communication
+  - rich (≥ 13.9.4): Rich text and formatting in the terminal
+  - typer (≥ 0.15.2): Building CLI applications
 
 ## Installation
 
@@ -32,23 +39,26 @@ pip install -r requirements.txt
 
 ## Usage
 
-After installation, you can run ZooDS from the command line. Below is an example of how to execute a basic diagnostic command:
+After installation, you can run ZooDS from the command line which triggers guided interface setup.
 
 ```bash
-zooDS --help
+zooDS
+Enter CAN interface (e.g., can0, vcan0): 
 ```
 
-This command will display a list of available commands and options. For example, to start a diagnostic session:
+user has the option to discover valid tester IDs:
 
 ```bash
-zooDS start-session [OPTIONS]
+Attempt to discover valid tester ID? (y/n):
 ```
+Enter "y" for zooDS to send standard functional broadcast on network and look for a response. 
+### Common Use Cases
 
-Refer to the help command for detailed usage of each command and additional options.
 
-## Configuration
+## Hardware Requirements
 
-ZooDS can be configured using a configuration file or environment variables. For instance, if you need to set the diagnostic communication port or adjust logging settings, add the necessary values to your configuration file. (See the documentation for detailed configuration options.)
+- CAN interface compatible with python-can (e.g., Vector, PCAN, Kvaser, SocketCAN)
+- Appropriate vehicle connector (e.g., OBD-II, manufacturer-specific diagnostic connector)
 
 ## Contributing
 
@@ -65,7 +75,10 @@ ZooDS is distributed under the MIT license. See the [LICENSE](LICENSE) file for 
 
 ## Contact
 
-For feature requests, questions, or bug reports, please open an issue on GitHub or contact the maintainers at [your.email@example.com](mailto:your.email@example.com).
+For feature requests, questions, or bug reports, please open an issue on GitHub or join our community Discord server.
+
+## Acknowledgements
+
+ZooDS leverages several open-source libraries for CAN communication and UDS protocol implementation. Special thanks to the maintainers of python-can and can-isotp.
 
 ---
-*This README content is a starting point. As the zooDS project evolves, be sure to update the documentation to reflect any changes or new features.*
