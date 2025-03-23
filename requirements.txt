@@ -1,0 +1,8 @@
+# Core dependencies
+click>=8.0.0
+python-can>=4.5.0
+can-isotp>=2.0.6
+
+# CLI interface
+rich>=13.9.4
+typer>=0.15.2
