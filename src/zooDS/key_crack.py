@@ -1,4 +1,4 @@
-from zoo_utils import wait_for_responses, process_ecu_response
+from .zoo_utils import wait_for_responses, process_ecu_response
 
 def key_request(key_req, stack, timeout=0.3):
     """
