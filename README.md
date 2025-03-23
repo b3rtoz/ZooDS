@@ -52,11 +52,10 @@ Enter "y" for zooDS to send standard functional broadcast on network and look fo
 ## Hardware Requirements
 
 - CAN interface compatible with python-can (e.g., Vector, PCAN, Kvaser, SocketCAN)
-- Appropriate vehicle connector (e.g., OBD-II, manufacturer-specific diagnostic connector)
 
 ## Contributing
 
-Contributions are highly welcome! If you have suggestions, bug reports, or would like to contribute code:
+Contributions are welcome! If you have suggestions, bug reports, or would like to contribute code:
 - Fork the repository.
 - Create your feature branch (`git checkout -b feature/your-feature`).
 - Commit your changes (`git commit -m 'Add new feature'`).
