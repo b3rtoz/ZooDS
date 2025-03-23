@@ -1,56 +1,28 @@
-import can
-from zooDS import did_scan, mem_scan, tester_present, zoo_utils, rid_scan, key_crack
+from zooDS import did_scan, mem_scan, tester_present, utils, rid_scan, key_crack
+from zooDS.utils import set_can_channel, stack_parms, set_isotp_stack, get_hex_input
 
 
 def zds():
     # Set up the CAN interface.
-    interface = input("Enter CAN interface (e.g., can0, vcan0): ").strip()
-    try:
-        bus = can.interface.Bus(channel=interface, interface='socketcan', timeout=0.3)
-    except Exception as e:
-        print(f"Error opening interface {interface}: {e}")
-        return
+    bus = set_can_channel(input("Enter CAN interface (e.g., can0, vcan0): ").strip())
 
     # Option to discover valid tester arbitration ID.
     if input("Attempt to discover valid tester ID? (y/n): ").strip().lower().startswith('y'):
-        result = tester_present.try_functional_broadcast(bus)
-        if result and isinstance(result, tuple):
-            discovered_tester, ecu_ids = result
-            print(f"Discovered tester ID: {hex(discovered_tester)}")
-            print("ECU responses from: " + ", ".join(hex(each_id) for each_id in ecu_ids))
-            choice = input("Use discovered tester ID? (y/n): ").strip().lower()
-            if choice.startswith('y'):
-                tester_id = discovered_tester
-            else:
-                tester_id = zoo_utils.get_hex_input("Enter Tester (source) id in hex: ")
-        else:
-            tester_id = zoo_utils.get_hex_input("Enter Tester (source) id in hex: ")
+        tester_id = utils.process_id_result(tester_present.try_functional_broadcast(bus))
     else:
-        tester_id = zoo_utils.get_hex_input("Enter Tester (source) id in hex: ")
+        tester_id = get_hex_input("Enter tester (source) id in hex: ")
 
-    ecu_id = zoo_utils.get_hex_input("Enter target ECU (destination) id in hex: ")
-    if tester_id is None or ecu_id is None:
-        return
+    # Create the ISO-TP stack
+    stack = set_isotp_stack(stack_parms(bus, tester_id))
 
-    # Automatically determine the identifier mode based on the tester ID.
-    if tester_id > 0x7FF:
-        id_mode = "29"
-    else:
-        id_mode = "11"
-        print(f"Automatically setting arbitration ID length to {id_mode}-bit based on Tester ID {hex(tester_id)}.")
-
-    # Create the ISO-TP stack using the centralized utility.
-    stack = zoo_utils.create_iso_tp_stack(bus, tester_id, ecu_id, id_mode=id_mode)
-    print(f"ISO-TP stack created with Tester ID {hex(tester_id)} and ECU ID {hex(ecu_id)} using {id_mode}-bit identifiers.")
-
-    # Main loop to process UDS commands.
+    # User command loop.
     while True:
         user_choice = input(
             "\nChoose an option or enter a UDS service in hex:\n"
             "1. Scan DIDs\n"
             "2. Scan RIDs\n"
             "3. Scan Memory by Address\n"
-            "4. Change Tester ID"
+            "4. Update Tester/ECU IDs\n"
             "5. Exit\n"
             "Or enter a UDS service (e.g., 10 01): "
         ).strip()
@@ -65,17 +37,15 @@ def zds():
             mem_scan.try_memory_scan(stack)
             continue
         elif user_choice == "4":
-            tester_id = zoo_utils.get_hex_input("Enter Tester (source) id in hex: ")
-            stack = zoo_utils.create_iso_tp_stack(bus, tester_id, ecu_id, id_mode=id_mode)
-            print(
-                f"ISO-TP stack created with Tester ID {hex(tester_id)} and ECU ID {hex(ecu_id)} using {id_mode}-bit identifiers.")
+            tester_id = utils.get_hex_input("Enter Tester (source) id in hex: ")
+            stack = set_isotp_stack(stack_parms(bus, tester_id))
             continue
         elif user_choice == "5":
             bus.shutdown()
             print("Shutting down CAN bus.")
             break
 
-        # Otherwise, treat the input as a custom UDS service in hex.
+        # if no. 1-5 is not entered, treat the input as a custom UDS service in hex.
         try:
             service_bytes = bytes.fromhex(user_choice)
         except ValueError:
@@ -84,11 +54,11 @@ def zds():
 
         print(f"Sending UDS service: {user_choice}...")
         stack.send(service_bytes)
-        responses = zoo_utils.wait_for_responses(stack, timeout=0.3)
+        responses = utils.wait_for_responses(stack, timeout=0.3)
 
         if responses:
             for resp in responses:
-                zoo_utils.print_response(resp, service_bytes)
+                utils.print_response(resp, service_bytes)
         else:
             print("No UDS response received within timeout.")
 

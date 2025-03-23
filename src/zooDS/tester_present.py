@@ -1,6 +1,7 @@
 import can
 import time
 
+
 def send_tester_present_functional(bus, arbitration_id, is_extended_id):
     """
     Sends a Tester Present (UDS service "3E 00") message on the given arbitration ID
@@ -44,6 +45,7 @@ def send_tester_present_functional(bus, arbitration_id, is_extended_id):
         print(f"No responses to Tester Present from ID {hex(arbitration_id)}.")
     return responses
 
+
 def try_functional_broadcast(bus):
     """
     Attempts to send a Tester Present functional broadcast using standard tester IDs.
@@ -58,7 +60,7 @@ def try_functional_broadcast(bus):
     """
     standard_ids = [
         (0x18DB33F1, True),  # 29-bit tester ID
-        (0x7DF, False)       # 11-bit tester ID
+        (0x7DF, False)  # 11-bit tester ID
     ]
     for tester_id, is_ext in standard_ids:
         responses = send_tester_present_functional(bus, tester_id, is_ext)
@@ -74,10 +76,10 @@ def try_functional_broadcast(bus):
             user_choice = input(
                 "\nNo functional broadcast responses from standard tester IDs.\n"
                 "1. Scan again\n"
-                "3. EXIT\n"
+                "2. EXIT\n"
                 "Or enter custom tester ID:"
             ).strip()
-            if user_choice == '1' :
+            if user_choice == '1':
                 for tester_id, is_ext in standard_ids:
                     responses = send_tester_present_functional(bus, tester_id, is_ext)
                     if responses:
@@ -95,7 +97,8 @@ def try_functional_broadcast(bus):
                 except ValueError:
                     print("Invalid value. Please try again.")
                     continue
-                is_ext = custom_id > 0x7FF  # Automatically determine ID length.
+                # Automatically determine ID length.
+                is_ext = custom_id > 0x7FF
                 responses = send_tester_present_functional(bus, custom_id, is_ext)
                 if responses:
                     ecu_ids = list({msg.arbitration_id for msg in responses})
@@ -107,7 +110,7 @@ def try_functional_broadcast(bus):
                     if cust_choice.startswith('y'):
                         return custom_id
                     else:
-                        return
+                        continue
     except KeyboardInterrupt:
         print("Exiting zooDS")
         bus.shutdown()

@@ -1,4 +1,4 @@
-from .zoo_utils import wait_for_responses, process_ecu_response
+from .utils import wait_for_responses, process_ecu_response
 
 def build_read_memory_request(address, size, mem_addr_len=4, mem_size_len=1):
     """
