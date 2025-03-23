@@ -23,31 +23,48 @@ ZooDS is a Python-based command-line interface (CLI) tool designed for automotiv
 
 ## Installation
 
-Clone the repository and install the dependencies:
+Clone the repository, install the dependencies:
 
 ```bash
 git clone https://github.com/b3rtoz/zooDS.git
 cd zooDS
 pip install -r requirements.txt
 ```
+Install from src:
+
+```bash
+pip install the/path/to/ZooDS
+
+```
+Or build the package and install from local archive:
+
+```bash
+python3 -m build
+pip install ZooDS/dist/zoods-x.x.x.x.tar.gz
+```
 
 ## Usage
 
-After installation, you can run ZooDS from the command line which triggers guided interface setup.
+After installation, you can run ZooDS from the command line:
 
 ```bash
 zooDS
-Enter CAN interface (e.g., can0, vcan0): 
 ```
-
-user has the option to discover valid tester IDs:
+zooDS will guide user through interface setup:
 
 ```bash
-Attempt to discover valid tester ID? (y/n):
+Enter CAN interface (e.g., can0, vcan0): 
 ```
-Enter "y" for zooDS to send standard functional broadcast on network and look for a response. 
+user has the option to discover valid tester IDs or enter manually:
+
+```bash
+Attempt to discover valid tester ID? (y/n): n
+Enter tester (source) id in hex: 7E0
+```
+
 ### Common Use Cases
 
+ToDO: add example feature use here
 
 ## Hardware Requirements
 
@@ -56,7 +73,7 @@ Enter "y" for zooDS to send standard functional broadcast on network and look fo
 ## Contributing
 
 Contributions are welcome! If you have suggestions, bug reports, or would like to contribute code:
-- Fork the repository.
+
 - Create your feature branch (`git checkout -b feature/your-feature`).
 - Commit your changes (`git commit -m 'Add new feature'`).
 - Push to the branch (`git push origin feature/your-feature`).
@@ -74,4 +91,5 @@ For feature requests, questions, or bug reports, please open an issue or post in
 
 ZooDS leverages several open-source libraries for CAN communication and UDS protocol implementation. Special thanks to the maintainers of python-can and can-isotp.
 
+## Disclaimer
 ---
