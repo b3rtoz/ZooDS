@@ -90,6 +90,4 @@ For feature requests, questions, or bug reports, please open an issue or post in
 ## Acknowledgements
 
 ZooDS leverages several open-source libraries for CAN communication and UDS protocol implementation. Special thanks to the maintainers of python-can and can-isotp.
-
-## Disclaimer
 ---
