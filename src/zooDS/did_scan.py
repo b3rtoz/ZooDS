@@ -1,4 +1,4 @@
-from .zoo_utils import wait_for_responses, process_ecu_response
+from .utils import wait_for_responses, process_ecu_response
 
 
 def read_did(did, stack, timeout = 0.3):

@@ -1,5 +1,6 @@
 import time
 import isotp
+import can
 
 """
 Utility module to handle common tasks
@@ -61,6 +62,7 @@ def process_ecu_response(response: bytes) -> str:
     description = NEGATIVE_RESPONSE_CODES.get(nrc, f"Unknown negative response code: {nrc:02X}")
     return description
 
+
 def wait_for_responses(stack, timeout, sleep_interval=0.01):
     """
     Waits for responses from the ECU via the provided stack.
@@ -87,6 +89,7 @@ def wait_for_responses(stack, timeout, sleep_interval=0.01):
         time.sleep(sleep_interval)
     return responses
 
+
 def get_hex_input(prompt):
     """
     Prompts the user for a hexadecimal input and returns its integer value.
@@ -104,31 +107,9 @@ def get_hex_input(prompt):
         print("Invalid hex format.")
         return None
 
-def create_iso_tp_stack(bus, tester_id, ecu_id, id_mode="11", stmin=0, blocksize=8):
-    """
-    Creates and returns an ISO-TP stack for the provided tester and ECU IDs.
 
-    Args:
-        bus: The CAN bus instance.
-        tester_id (int): The tester (source) ID.
-        ecu_id (int): The target ECU (destination) ID.
-        id_mode (str): "11" for 11-bit or "29" for 29-bit identifiers.
-        stmin (int): Separation time minimum (default 0).
-        blocksize (int): Block size (default 8).
 
-    Returns:
-        isotp.CanStack: The configured ISO-TP stack.
-    """
-    if id_mode == "11":
-        addressing_mode = isotp.AddressingMode.Normal_11bits
-    elif id_mode == "29":
-        addressing_mode = isotp.AddressingMode.Normal_29bits
-    else:
-        print("Invalid identifier mode, defaulting to 11-bit.")
-        addressing_mode = isotp.AddressingMode.Normal_11bits
 
-    address = isotp.Address(addressing_mode, txid=tester_id, rxid=ecu_id)
-    return isotp.CanStack(bus=bus, address=address, params={'stmin': stmin, 'blocksize': blocksize})
 
 def print_response(response, service_bytes):
     """
@@ -136,6 +117,8 @@ def print_response(response, service_bytes):
 
     Args:
         response: ECU response frame (bytes).
+        service_bytes: Request from Tester (bytes)
+
     """
     processed = process_ecu_response(response)
     raw = response.hex(' ')
@@ -151,3 +134,84 @@ def print_response(response, service_bytes):
     print(f"{raw}: {processed}")
     print(f"data: {data}")
     print(f"ascii: {decoded}")
+
+
+def set_can_channel(interface):
+    """
+        Retruns sting of CAN bus instance channel.
+
+        Args:
+            interface (str): name of CAN bus network.
+        """
+    try:
+        bus = can.interface.Bus(channel=interface, interface='socketcan', timeout=0.3)
+    except Exception as e:
+        print(f"Error opening interface {interface}: {e}")
+        return
+    return bus
+
+
+def process_id_result(result):
+    if result and isinstance(result, tuple):
+        discovered_tester, ecu_ids = result
+        # print(f"Discovered tester ID: {hex(discovered_tester)}")
+        print(f"Responses to tester ID: {hex(discovered_tester)}from: " + ", ".join(hex(each_id) for each_id in ecu_ids))
+        choice = input("Use this tester ID? (y/n): ").strip().lower()
+        if choice.startswith('y'):
+            tester_id = discovered_tester
+        else:
+            tester_id = get_hex_input("Enter Tester (source) id in hex: ")
+    else:
+        tester_id = get_hex_input("Enter Tester (source) id in hex: ")
+    return tester_id
+
+
+def stack_parms(bus, tester_id):
+    """
+    Creates and outputs a tuple of ISO-TP stack parameters.
+
+    Args:
+        bus (str): bus: The CAN bus instance.
+        tester_id (int): Tester (source) ID
+
+    Returns:
+         tuple [bus, txid, rxid, addressing mode]
+    """
+    if tester_id > 0x7FF:
+        id_mode = "29"
+    else:
+        id_mode = "11"
+        print(f"Automatically setting arbitration ID length to {id_mode}-bit based on Tester ID {hex(tester_id)}.")
+    ecu_id = get_hex_input("Enter target ECU (destination) id in hex: ")
+    if tester_id is None or ecu_id is None:
+        return
+    return bus, tester_id, ecu_id, id_mode
+
+
+def set_isotp_stack(parms, stmin=0, blocksize=8):
+    """
+    Creates and returns an ISO-TP stack for the provided tester and ECU IDs.
+
+    Args:
+        parms (tuple): [bus, tester_id, ecu_id, id_mode]
+        stmin (int): Separation time minimum (default 0).
+        blocksize (int): Block size (default 8).
+
+    Returns:
+        isotp.CanStack: The configured ISO-TP stack.
+    """
+    if parms and isinstance(parms, tuple):
+        bus, tester_id, ecu_id, id_mode = parms
+        if id_mode == "11":
+            addressing_mode = isotp.AddressingMode.Normal_11bits
+        elif id_mode == "29":
+            addressing_mode = isotp.AddressingMode.Normal_29bits
+        else:
+            print("Invalid identifier mode, defaulting to 11-bit.")
+            addressing_mode = isotp.AddressingMode.Normal_11bits
+        address = isotp.Address(addressing_mode, txid=tester_id, rxid=ecu_id)
+        return isotp.CanStack(bus=bus, address=address, params={'stmin': stmin, 'blocksize': blocksize})
+    else:
+        print("Invalid parameters")
+        return
+
