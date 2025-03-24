@@ -3,8 +3,8 @@ zooDS main module that provides an interactive command-line interface for UDS (U
 communications over CAN bus. This module allows scanning DIDs, RIDs, memory addresses, 
 and sending custom UDS services.
 """
-# Import from parent package to avoid circular imports
-from zooDS import did_scan, mem_scan, tester_present, utils, rid_scan, key_crack
+
+import did_scan, mem_scan, tester_present, utils, rid_scan, key_crack
 from .utils import set_can_channel, stack_parms, set_isotp_stack, get_hex_input
 
 
@@ -99,47 +99,41 @@ def zds():
                         print("Invalid timeout value. Keeping current setting.")
                 elif option == 6:
                     break
-                else:
-                    try:
-                        # Validate hex input format
-                        user_choice = user_choice.replace(" ", "")
-                        if not all(c in '0123456789ABCDEFabcdef' for c in user_choice):
-                            print("Invalid hex characters. Please use only 0-9, A-F.")
-                            continue
-
-                        service_bytes = bytes.fromhex(user_choice)
-                        if len(service_bytes) == 0:
-                            print("Empty hex input. Please try again.")
-                            continue
-
-                    except ValueError as e:
-                        print(f"Invalid hex input: {e}. Please try again.")
+            else:
+                try:
+                    # Validate hex input format
+                    user_choice = user_choice.replace(" ", "")
+                    if not all(c in '0123456789ABCDEFabcdef' for c in user_choice):
+                        print("Invalid hex characters. Please use only 0-9, A-F.")
                         continue
 
-                    print(f"Sending UDS service: {user_choice}...")
-                    try:
-                        stack.send(service_bytes)
-                        responses = utils.wait_for_responses(stack, timeout=default_timeout)
+                    service_bytes = bytes.fromhex(user_choice)
+                    if len(service_bytes) == 0:
+                        print("Empty hex input. Please try again.")
+                        continue
 
-                        if responses:
-                            for resp in responses:
-                                utils.print_response(resp, service_bytes)
-                        else:
-                            print("No UDS response received within timeout.")
+                except ValueError as e:
+                    print(f"Invalid hex input: {e}. Please try again.")
+                    continue
 
-                        # Handle Security Access regardless of response (changed from original)
-                        if service_bytes[0] == 0x27:
-                            key_crack.handle_security_access(service_bytes, responses, stack)
+                print(f"Sending UDS service: {user_choice}...")
+                try:
+                    stack.send(service_bytes)
+                    responses = utils.wait_for_responses(stack, timeout=default_timeout)
 
-                    except Exception as e:
-                        print(f"Error sending UDS service: {e}")
+                    if responses:
+                        for resp in responses:
+                            utils.print_response(resp, service_bytes)
+                    else:
+                        print("No UDS response received within timeout.")
 
-                continue
+                    # Handle Security Access regardless of response (changed from original)
+                    if service_bytes[0] == 0x27:
+                        key_crack.handle_security_access(service_bytes, responses, stack)
 
-            # Process custom UDS service
-            if not user_choice:
-                continue
-
+                except Exception as e:
+                    print(f"Error sending UDS service: {e}")
+            continue
 
     except KeyboardInterrupt:
         print("\nOperation interrupted by user")

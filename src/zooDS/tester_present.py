@@ -33,7 +33,7 @@ def send_tester_present_functional(bus, arbitration_id, is_extended_id):
     responses = []
     while True:
         msg = bus.recv(timeout=0.1)
-        if msg:
+        if msg[1] == 0x7E:
             responses.append(msg)
             last_frame_time = time.time()  # Reset timeout on receiving a message
         if time.time() - last_frame_time > timeout_gap:
