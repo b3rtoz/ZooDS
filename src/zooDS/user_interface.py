@@ -3,8 +3,8 @@ zooDS main module that provides an interactive command-line interface for UDS (U
 communications over CAN bus. This module allows scanning DIDs, RIDs, memory addresses, 
 and sending custom UDS services.
 """
-# Import from parent package to avoid circular imports
-from zooDS import did_scan, mem_scan, tester_present, utils, rid_scan, key_crack
+
+import did_scan, mem_scan, tester_present, utils, rid_scan, key_crack
 from .utils import set_can_channel, stack_parms, set_isotp_stack, get_hex_input
 
 
