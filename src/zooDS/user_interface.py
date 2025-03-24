@@ -70,70 +70,47 @@ def zds():
                 "Or enter a UDS service (e.g., 10 01): "
             ).strip()
 
-            # Process numeric options with better validation
-            if user_choice.isdigit():
-                option = int(user_choice)
-
-                if option == 1:
+            if user_choice == '1':
                     did_scan.try_all_dids(stack, timeout=default_timeout)
-                elif option == 2:
+            elif user_choice == '2':
                     rid_scan.try_all_rids(stack, timeout=default_timeout)
-                elif option == 3:
+            elif user_choice == '3':
                     mem_scan.try_memory_scan(stack, timeout=default_timeout)
-                elif option == 4:
-                    # Update both tester and ECU IDs
-                    tester_id = get_hex_input("Enter Tester (source) id in hex: ")
-                    try:
-                        stack_params = stack_parms(bus, tester_id)
-                        stack = set_isotp_stack(stack_params)
-                        print("IDs updated successfully")
-                    except Exception as e:
-                        print(f"Error updating IDs: {e}")
-                elif option == 5:
-                    # Allow timeout configuration
-                    try:
-                        new_timeout = float(input("Enter new timeout value in seconds: ").strip())
-                        default_timeout = new_timeout
-                        print(f"Timeout updated to {default_timeout} seconds")
-                    except ValueError:
-                        print("Invalid timeout value. Keeping current setting.")
-                elif option == 6:
+            elif user_choice == '4':
+                # Update both tester and ECU IDs
+                tester_id = get_hex_input("Enter Tester (source) id in hex: ")
+                try:
+                    stack_params = stack_parms(bus, tester_id)
+                    stack = set_isotp_stack(stack_params)
+                    print("IDs updated successfully")
+                except Exception as e:
+                    print(f"Error updating IDs: {e}")
+            elif user_choice == '5':
+                # Allow timeout configuration
+                try:
+                    new_timeout = float(input("Enter new timeout value in seconds: ").strip())
+                    default_timeout = new_timeout
+                    print(f"Timeout updated to {default_timeout} seconds")
+                except ValueError:
+                    print("Invalid timeout value. Keeping current setting.")
+            elif user_choice == '6':
                     break
             else:
                 try:
-                    # Validate hex input format
-                    user_choice = user_choice.replace(" ", "")
-                    if not all(c in '0123456789ABCDEFabcdef' for c in user_choice):
-                        print("Invalid hex characters. Please use only 0-9, A-F.")
-                        continue
-
                     service_bytes = bytes.fromhex(user_choice)
-                    if len(service_bytes) == 0:
-                        print("Empty hex input. Please try again.")
-                        continue
-
-                except ValueError as e:
-                    print(f"Invalid hex input: {e}. Please try again.")
+                except ValueError:
+                    print("Invalid hex input. Please try again.")
                     continue
 
                 print(f"Sending UDS service: {user_choice}...")
-                try:
-                    stack.send(service_bytes)
-                    responses = utils.wait_for_responses(stack, timeout=default_timeout)
+                stack.send(service_bytes)
+                responses = utils.wait_for_responses(stack, timeout=0.3)
 
-                    if responses:
-                        for resp in responses:
-                            utils.print_response(resp, service_bytes)
-                    else:
-                        print("No UDS response received within timeout.")
-
-                    # Handle Security Access regardless of response (changed from original)
-                    if service_bytes[0] == 0x27:
-                        key_crack.handle_security_access(service_bytes, responses, stack)
-
-                except Exception as e:
-                    print(f"Error sending UDS service: {e}")
-            continue
+                if responses:
+                    for resp in responses:
+                        utils.print_response(resp, service_bytes)
+                else:
+                    print("No UDS response received within timeout.")
 
     except KeyboardInterrupt:
         print("\nOperation interrupted by user")
