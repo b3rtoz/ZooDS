@@ -41,9 +41,9 @@ def send_tester_present_functional(bus, arbitration_id, is_extended_id):
 
     if responses:
         for r in responses:
-            print(f"Received response from ECU ID {hex(r.arbitration_id)}: {r}")
+            print(f"Response from: {hex(r.arbitration_id)}")
     else:
-        print(f"No responses to Tester Present from ID {hex(arbitration_id)}.")
+        print(f"\nNo responses to Tester Present from ID {hex(arbitration_id)}.")
     return responses
 
 
@@ -67,8 +67,8 @@ def try_functional_broadcast(bus):
         responses = send_tester_present_functional(bus, tester_id, is_ext)
         if responses:
             ecu_ids = list({msg.arbitration_id for msg in responses})
-            print(f"Functional broadcast successful with tester ID {hex(tester_id)}.")
-            print("ECU responses from IDs: " + ", ".join(hex(x) for x in ecu_ids))
+            print(f"Functional broadcast with tester ID {hex(tester_id)}.")
+            print("response from ID(s): " + ", ".join(hex(x) for x in ecu_ids))
             return tester_id, ecu_ids
 
     # No responses received; prompt the user.
@@ -86,7 +86,7 @@ def try_functional_broadcast(bus):
                     if responses:
                         ecu_ids = list({msg.arbitration_id for msg in responses})
                         print(f"Functional broadcast with tester ID {hex(tester_id)}.")
-                        print("ECU responses from IDs: " + ", ".join(hex(x) for x in ecu_ids))
+                        print("response from ID(s): " + ", ".join(hex(x) for x in ecu_ids))
                         return tester_id, ecu_ids
             elif user_choice == '2':
                 bus.shutdown()
@@ -103,8 +103,8 @@ def try_functional_broadcast(bus):
                 responses = send_tester_present_functional(bus, custom_id, is_ext)
                 if responses:
                     ecu_ids = list({msg.arbitration_id for msg in responses})
-                    print(f"Functional broadcast successful with tester ID {hex(custom_id)}.")
-                    print("ECU responses from IDs: " + ", ".join(hex(x) for x in ecu_ids))
+                    print(f"Functional broadcast with tester ID {hex(custom_id)}.")
+                    print("response from ID(s): " + ", ".join(hex(x) for x in ecu_ids))
                     return custom_id, ecu_ids
                 else:
                     cust_choice = input(f"Use it anyway? (y/n): ".format().strip().lower())

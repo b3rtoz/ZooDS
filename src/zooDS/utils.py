@@ -124,7 +124,7 @@ def print_response(response, service_bytes):
     raw = response.hex(' ')
     # first two bytes in response are header  first two bytes.
     if len(service_bytes) > 2:
-        data = response.hex()[8:]
+        data = response.hex()[6:]
     else:
         data = response.hex()[4:]
     try:

@@ -4,10 +4,10 @@ build-backend = "hatchling.build"
 
 [project]
 name = "zooDS"
-version = "0.0.6.3"
+version = "0.0.6.4"
 dynamic = ["dependencies"]
 authors = [
-  { name="b3rtoz", email="b3rtoz@proton.me" },
+  { name="b3rtoz"},
 ]
 description = "An automotive UDS cli tool"
 readme = "README.md"

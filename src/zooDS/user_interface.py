@@ -3,8 +3,7 @@ zooDS main module that provides an interactive command-line interface for UDS (U
 communications over CAN bus. This module allows scanning DIDs, RIDs, memory addresses, 
 and sending custom UDS services.
 """
-
-import did_scan, mem_scan, tester_present, utils, rid_scan, key_crack
+from zooDS import did_scan, mem_scan, tester_present, utils, rid_scan, key_crack
 from .utils import set_can_channel, stack_parms, set_isotp_stack, get_hex_input
 
 
@@ -13,6 +12,7 @@ def zds():
     Main function that provides a CLI for UDS communications.
     Handles CAN interface setup, UDS commands.
     """
+
     bus = None
     try:
         # Set up the CAN interface with error handling
@@ -104,13 +104,17 @@ def zds():
 
                 print(f"Sending UDS service: {user_choice}...")
                 stack.send(service_bytes)
-                responses = utils.wait_for_responses(stack, timeout=0.3)
+                responses = utils.wait_for_responses(stack, timeout=default_timeout)
 
                 if responses:
                     for resp in responses:
                         utils.print_response(resp, service_bytes)
                 else:
                     print("No UDS response received within timeout.")
+
+                # If Security Access (0x27) is requested, delegate handling to key_crack.
+                if service_bytes[0] == 0x27 and responses:
+                    key_crack.handle_security_access(service_bytes, responses, stack)
 
     except KeyboardInterrupt:
         print("\nOperation interrupted by user")
