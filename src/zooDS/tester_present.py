@@ -32,12 +32,13 @@ def send_tester_present_functional(bus, arbitration_id, is_extended_id):
     last_frame_time = time.time()
     responses = []
     while True:
-        msg = bus.recv(timeout=0.1)
-        if msg[1] == 0x7E:
+        msg = bus.recv(timeout=1.0)
+        if msg.data[1] == 0x7E:
             responses.append(msg)
             last_frame_time = time.time()  # Reset timeout on receiving a message
         if time.time() - last_frame_time > timeout_gap:
             break
+
     if responses:
         for r in responses:
             print(f"Received response from ECU ID {hex(r.arbitration_id)}: {r}")
