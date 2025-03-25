@@ -33,6 +33,7 @@ pip install -r requirements.txt
 Install from src:
 
 ```bash
+python3 -m build 
 pip install the/path/to/ZooDS
 
 ```
